@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,36 +8,90 @@
     <meta property="og:title" content="Contact Us - Banana Shop">
     <meta property="og:description" content="Get in touch with us for any inquiries or support. We're here to help!">
     <meta property="og:image" content="images/contact.jpg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' https://your-cdn.com data:;
+        script-src 'self' https://www.google.com/recaptcha/;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self';
+        connect-src 'self' https://api.yourdomain.com;
+    ">
     <link rel="stylesheet" href="style.css">
-    <title>Contact Us</title>
+    <link rel="canonical" href="https://yourdomain.com/contact.html">
+    <meta name="robots" content="index, follow">
+    <title>Contact Us - Banana Shop</title>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "ContactPage",
+      "name": "Contact Us - Banana Shop",
+      "description": "Get in touch with Banana Shop for any inquiries or support.",
+      "url": "https://yourdomain.com/contact.html",
+      "contactOption": "http://schema.org/ContactOption",
+      "email": "support@bananashop.com",
+      "telephone": "+1-234-567-8900"
+    }
+    </script>
+    <!-- Google reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <header>
         <h1>Contact Us</h1>
-        <nav>
+        <nav role="navigation" aria-label="Primary Navigation">
             <ul>
                 <li><a href="index.html" aria-label="Home">Home</a></li>
                 <li><a href="products.html" aria-label="Products">Products</a></li>
                 <li><a href="contact.html" aria-label="Contact" class="active">Contact</a></li>
                 <li><a href="cart.html" aria-label="Cart">Cart</a></li>
+                <li><a href="account.html" aria-label="My Account">My Account</a></li>
             </ul>
         </nav>
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ol>
+        </nav>
     </header>
-    <main>
+    <main id="mainContent">
         <h2>Get in Touch</h2>
-        <form id="contactForm">
+        <form id="contactForm" novalidate>
+            <label for="subject">Subject:</label>
+            <select id="subject" name="subject" required aria-label="Select subject" aria-required="true" aria-describedby="subjectError">
+                <option value="" disabled selected>Select an option</option>
+                <option value="Order Issue">Order Issue</option>
+                <option value="Product Inquiry">Product Inquiry</option>
+                <option value="Feedback">Feedback</option>
+                <option value="Other">Other</option>
+            </select>
+            <div id="subjectError" role="alert" aria-live="assertive"></div>
+            
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required aria-label="Enter your name">
+            <input type="text" id="name" name="name" required aria-label="Enter your name" aria-required="true" aria-describedby="nameError">
+            <div id="nameError" role="alert" aria-live="assertive"></div>
+            
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required aria-label="Enter your email">
+            <input type="email" id="email" name="email" required aria-label="Enter your email" aria-required="true" aria-describedby="emailError">
+            <div id="emailError" role="alert" aria-live="assertive"></div>
+            
             <label for="message">Message:</label>
-            <textarea id="message" name="message" required aria-label="Enter your message"></textarea>
-            <button type="submit" aria-label="Send Message">Send Message</button>
+            <textarea id="message" name="message" required aria-label="Enter your message" aria-required="true" aria-describedby="messageError"></textarea>
+            <div id="messageError" role="alert" aria-live="assertive"></div>
+            
+            <!-- Google reCAPTCHA -->
+            <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+            <div id="captchaError" role="alert" aria-live="assertive"></div>
+            
+            <button type="submit" class="btn" aria-label="Send Message">Send Message</button>
         </form>
+        <div id="toast" aria-live="assertive"></div>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script src="script.js"></script>
+    <script type="module" src="contact.js"></script>
 </body>
 </html>

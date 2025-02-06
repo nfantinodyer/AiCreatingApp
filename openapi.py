@@ -1,19 +1,53 @@
 import openai
-import json
+import json  # Only used to load the API key.
 import os
 import re
+import sys
 
 # Load the OpenAI API key from a config file.
-config = {}
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
 openai.api_key = config["api_key"]
 
+
+# Reconfigure sys.stdout to use UTF-8 (available in Python 3.7+)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+def remove_triple_backtick_lines(directory):
+    """
+    Walk through the given directory and all its subdirectories.
+    For each .html, .js, or .css file found, remove any lines
+    that contain triple backticks ('```'), then overwrite the file
+    with the filtered content.
+    """
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            # Check if the file has one of the desired extensions
+            if filename.endswith(('.html', '.js', '.css')):
+                file_path = os.path.join(root, filename)
+                
+                # Read all lines from the file
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+
+                # Keep only the lines that do NOT contain triple backticks
+                filtered_lines = [line for line in lines if '```' not in line]
+
+                # Overwrite the file with filtered lines
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.writelines(filtered_lines)
+
 def safe_print(text):
+    """
+    Print text using UTF-8 encoding. If a UnicodeEncodeError occurs, replace invalid characters.
+    """
     try:
         print(text)
-    except Exception as e:
-        print(text)
+    except UnicodeEncodeError:
+        print(text.encode('utf-8', errors='replace').decode('utf-8'))
 
 def parse_files(text):
     """
@@ -25,11 +59,19 @@ def parse_files(text):
     ### end ###
     
     Returns a dictionary mapping filenames to their content.
+    If the first and last lines of the file's content consist solely of triple backticks (```),
+    they are removed.
     """
     pattern = r"### filename: (.*?) ###\s*(.*?)\s*### end ###"
     matches = re.findall(pattern, text, flags=re.DOTALL)
     result = {}
     for filename, content in matches:
+        lines = content.splitlines()
+        # Check if there are at least two lines and both the first and last lines are exactly "```"
+        if len(lines) >= 2 and lines[0].strip() == "```" and lines[-1].strip() == "```":
+            content = "\n".join(lines[1:-1])
+        else:
+            content = "\n".join(lines)
         result[filename.strip()] = content.strip()
     return result
 
@@ -56,7 +98,11 @@ def write_files(file_dict, output_directory):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
-def generate_initial_code(prompt):
+# --- Model Call Functions (using o1-mini or o1-preview) ---
+# Set the default model to use. Change this to "o1-preview" if desired.
+DEFAULT_MODEL = "o1-mini"
+
+def generate_initial_code(prompt, model=DEFAULT_MODEL):
     full_prompt = (
         prompt + "\n\n"
         "Return your output in the following format:\n"
@@ -66,17 +112,14 @@ def generate_initial_code(prompt):
         "### end ###\n"
         "Do not include any additional commentary."
     )
+    # Use only a user message (no system message)
     response = openai.chat.completions.create(
-        model="gpt-4o",  # Using a GPT-4 variant
-        messages=[
-            {"role": "system", "content": "You are an expert developer."},
-            {"role": "user", "content": full_prompt}
-        ],
-        temperature=0.8,
+        model=model,
+        messages=[{"role": "user", "content": full_prompt}],
     )
     return response.choices[0].message.content
 
-def review_code(code, reviewer_prompt, model="gpt-4o"):
+def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     full_prompt = (
         reviewer_prompt + "\n\n"
         "Return the corrected code in the same format as provided below. Do not include any commentary.\n\n"
@@ -85,15 +128,11 @@ def review_code(code, reviewer_prompt, model="gpt-4o"):
     )
     response = openai.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": "You are an expert code reviewer and fixer."},
-            {"role": "user", "content": full_prompt}
-        ],
-        temperature=0.3,
+        messages=[{"role": "user", "content": full_prompt}],
     )
     return response.choices[0].message.content
 
-def aggregate_reviews(original_code, review1, review2, model="gpt-4o"):
+def aggregate_reviews(original_code, review1, review2, model=DEFAULT_MODEL):
     aggregator_prompt = (
         "I have an original piece of code and two revised versions provided by independent reviewers. "
         "Each is in the following format:\n"
@@ -108,15 +147,11 @@ def aggregate_reviews(original_code, review1, review2, model="gpt-4o"):
     )
     response = openai.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": "You are an expert code aggregator."},
-            {"role": "user", "content": aggregator_prompt}
-        ],
-        temperature=0.3,
+        messages=[{"role": "user", "content": aggregator_prompt}],
     )
     return response.choices[0].message.content
 
-def gap_analysis(code_text, model="gpt-4o"):
+def gap_analysis(code_text, model=DEFAULT_MODEL):
     analysis_prompt = (
         "Please review the following code for a website for selling bananas. "
         "Identify any missing features or improvements, and provide suggestions on what to add or fix.\n\n"
@@ -124,11 +159,7 @@ def gap_analysis(code_text, model="gpt-4o"):
     )
     response = openai.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": "You are an expert quality assurance and improvement assistant."},
-            {"role": "user", "content": analysis_prompt}
-        ],
-        temperature=0.3,
+        messages=[{"role": "user", "content": analysis_prompt}],
     )
     return response.choices[0].message.content
 
@@ -160,7 +191,7 @@ while iteration < max_iterations:
         updated_prompt = (
             base_prompt +
             "\n\nCurrent website files:\n" + current_files_str +
-            "\n\nIncorporate the following improvements:\n" + pre_analysis
+            "\n\nIncorporate all of the following improvements:\n" + pre_analysis
         )
     else:
         updated_prompt = base_prompt
@@ -169,28 +200,31 @@ while iteration < max_iterations:
     safe_print(updated_prompt)
 
     # --- Step 1: Initial Code Generation ---
+    print("Initial Code Generation Begins")
     initial_code_output = generate_initial_code(updated_prompt)
-    safe_print("Initial code generated:")
-    safe_print(initial_code_output)
     initial_files = parse_files(initial_code_output)
     write_files(initial_files, WEBSITE_DIR)
+    remove_triple_backtick_lines(WEBSITE_DIR)
+    print("Initial Code Generation Ends")
 
     # --- Step 2: Reviews ---
+    print("Review Begins")
     review1_output = review_code(initial_code_output, "Please review the code and fix any errors or issues you see.")
-    safe_print("Reviewer 1 output:")
-    safe_print(review1_output)
+    safe_print("Reviewer 1 complete")
+
     review2_output = review_code(initial_code_output, "Please inspect the code for any bugs or improvements and return a corrected version.")
-    safe_print("Reviewer 2 output:")
-    safe_print(review2_output)
+    safe_print("Reviewer 2 complete")
 
     # --- Step 3: Aggregation ---
+    print("Aggregation Begins")
     aggregated_code_output = aggregate_reviews(initial_code_output, review1_output, review2_output)
-    safe_print("Aggregated final code:")
-    safe_print(aggregated_code_output)
     aggregated_files = parse_files(aggregated_code_output)
     write_files(aggregated_files, WEBSITE_DIR)
+    remove_triple_backtick_lines(WEBSITE_DIR)
+    print("Aggregation Ends")
 
     # --- Step 4: Post-run Gap Analysis ---
+    print("Post-run Gap Analysis Begins")
     post_analysis = gap_analysis(aggregated_code_output)
     safe_print("Post-run Gap Analysis suggestions:")
     safe_print(post_analysis)
@@ -199,7 +233,7 @@ while iteration < max_iterations:
     base_prompt = (
         "Create a website in HTML, CSS, and JavaScript for selling bananas. "
         "Include a homepage, product listing, and a contact form."
-        "\n\nIncorporate the following improvements based on the latest gap analysis:\n" + post_analysis
+        "\n\nIncorporate all of the following improvements:\n" + post_analysis
     )
     safe_print("Base prompt updated for next iteration:")
     safe_print(base_prompt)
@@ -213,3 +247,4 @@ while iteration < max_iterations:
     iteration += 1
 
 safe_print(f"\nAll iterations complete. Website files are in '{WEBSITE_DIR}'.")
+

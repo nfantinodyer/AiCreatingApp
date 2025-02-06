@@ -9,48 +9,154 @@
     <meta property="og:title" content="Banana Products">
     <meta property="og:description" content="Check out our organic and golden bananas, available at great prices.">
     <meta property="og:image" content="images/banana_products.jpg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' https://your-cdn.com data:;
+        script-src 'self' https://js.stripe.com https://www.google.com/recaptcha/;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self';
+        connect-src 'self' https://api.yourdomain.com;
+    ">
     <link rel="stylesheet" href="style.css">
-    <title>Banana Products</title>
+    <link rel="canonical" href="https://yourdomain.com/products.html">
+    <meta name="robots" content="index, follow">
+    <title>Banana Products - Banana Shop</title>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "ItemList",
+      "itemListElement": [
+        {
+          "@type": "Product",
+          "name": "Organic Bananas",
+          "image": "https://yourdomain.com/images/organic_bananas.jpg",
+          "description": "Freshly picked organic bananas from local farms.",
+          "sku": "ORG-BN-001",
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "USD",
+            "price": "1.00",
+            "availability": "http://schema.org/InStock",
+            "url": "https://yourdomain.com/products.html#Organic-Bananas"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.5",
+            "reviewCount": "24"
+          },
+          "review": [
+            {
+              "@type": "Review",
+              "author": "Jane Doe",
+              "datePublished": "2023-09-15",
+              "reviewBody": "Excellent quality and fresh bananas!",
+              "reviewRating": {
+                "@type": "Rating",
+                "bestRating": "5",
+                "ratingValue": "5",
+                "worstRating": "1"
+              }
+            }
+          ]
+        },
+        {
+          "@type": "Product",
+          "name": "Golden Bananas",
+          "image": "https://yourdomain.com/images/golden_bananas.jpg",
+          "description": "Sweet golden bananas.",
+          "sku": "GOLD-BN-002",
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "USD",
+            "price": "0.80",
+            "availability": "http://schema.org/InStock",
+            "url": "https://yourdomain.com/products.html#Golden-Bananas"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.2",
+            "reviewCount": "18"
+          },
+          "review": [
+            {
+              "@type": "Review",
+              "author": "John Smith",
+              "datePublished": "2023-09-10",
+              "reviewBody": "Great taste and perfect ripeness!",
+              "reviewRating": {
+                "@type": "Rating",
+                "bestRating": "5",
+                "ratingValue": "4",
+                "worstRating": "1"
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <header>
         <h1>Our Products</h1>
-        <nav>
+        <nav role="navigation" aria-label="Primary Navigation">
             <ul>
                 <li><a href="index.html" aria-label="Home">Home</a></li>
                 <li><a href="products.html" aria-label="Products" class="active">Products</a></li>
                 <li><a href="contact.html" aria-label="Contact">Contact</a></li>
                 <li><a href="cart.html" aria-label="Cart">Cart</a></li>
+                <li><a href="account.html" aria-label="My Account">My Account</a></li>
             </ul>
         </nav>
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="index.html">Home</a></li>
+                <li aria-current="page">Products</li>
+            </ol>
+        </nav>
+        <div class="cart-icon">
+            <a href="cart.html" aria-label="Cart">
+                <img src="images/cart-icon.svg" alt="Cart">
+                <span id="cart-count">0</span>
+            </a>
+        </div>
     </header>
-    <main>
+    <main id="mainContent">
         <h2>Available Bananas</h2>
-        <section class="product">
-            <img src="images/organic_bananas.jpg" alt="Organic Bananas - Freshly picked organic bananas from local farms">
-            <h3>Organic Bananas</h3>
-            <p>Freshly picked organic bananas.</p>
-            <p>Price: $1.00 each</p>
-            <label for="quantityOrganic">Quantity:</label>
-            <input type="number" id="quantityOrganic" value="1" min="1" max="10">
-            <button aria-label="Add Organic Bananas to Cart" onclick="addToCart('Organic Bananas', parseInt(document.getElementById('quantityOrganic').value))">Add to Cart</button>
+        
+        <!-- Search and Filter Section -->
+        <section id="search-filter">
+            <input type="text" id="searchInput" placeholder="Search products..." aria-label="Search products">
+            <select id="filterSelect" aria-label="Filter products">
+                <option value="all">All</option>
+                <option value="organic">Organic Bananas</option>
+                <option value="golden">Golden Bananas</option>
+            </select>
         </section>
-        <section class="product">
-            <img src="images/golden_bananas.jpg" alt="Golden Bananas - Sweet golden bananas with a delightful flavor">
-            <h3>Golden Bananas</h3>
-            <p>Sweet golden bananas.</p>
-            <p>Price: $0.80 each</p>
-            <label for="quantityGolden">Quantity:</label>
-            <input type="number" id="quantityGolden" value="1" min="1" max="10">
-            <button aria-label="Add Golden Bananas to Cart" onclick="addToCart('Golden Bananas', parseInt(document.getElementById('quantityGolden').value))">Add to Cart</button>
+        
+        <!-- Product Listings -->
+        <section id="product-list">
+            <!-- Products will be loaded dynamically here -->
+            <div id="loadingSpinner" class="spinner" style="display: none;"></div>
         </section>
+        
+        <!-- Pagination -->
+        <section id="pagination">
+            <button id="prevPage" class="btn" aria-label="Previous Page">Previous</button>
+            <span id="currentPage">1</span>
+            <button id="nextPage" class="btn" aria-label="Next Page">Next</button>
+        </section>
+        
         <h3>Your Cart</h3>
         <div id="cart" aria-live="polite"></div>
         <p id="totalPrice"></p>
+        <div id="toast" aria-live="assertive"></div>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script src="script.js"></script>
+    <script type="module" src="products.js"></script>
 </body>
 </html>

@@ -1,0 +1,117 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Banana Shop</title>
+    <meta name="description" content="Complete your purchase at Banana Shop. Secure checkout with order summary and payment options.">
+    <meta name="keywords" content="Checkout, Banana Shop, Purchase, Payment">
+    <meta name="author" content="Banana Shop">
+    <meta property="og:title" content="Checkout - Banana Shop">
+    <meta property="og:description" content="Complete your purchase with our secure checkout process.">
+    <meta property="og:image" content="images/checkout.jpg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' https://your-cdn.com data:;
+        script-src 'self' https://js.stripe.com https://www.google.com/recaptcha/;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self';
+        connect-src 'self' https://api.yourdomain.com;
+    ">
+    <link rel="stylesheet" href="style.css">
+    <link rel="canonical" href="https://yourdomain.com/checkout.html">
+    <meta name="robots" content="index, follow">
+    <title>Checkout - Banana Shop</title>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Order",
+      "orderStatus": "http://schema.org/OrderProcessing",
+      "orderDate": "2023-10-01",
+      "customer": {
+        "@type": "Person",
+        "name": "John Doe"
+      },
+      "acceptedOffer": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Product",
+            "name": "Organic Bananas",
+            "sku": "ORG-BN-001",
+            "price": "1.00",
+            "priceCurrency": "USD"
+          },
+          "price": "1.00",
+          "priceCurrency": "USD",
+          "quantity": 2
+        }
+      ]
+    }
+    </script>
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <header>
+        <h1>Checkout</h1>
+        <nav role="navigation" aria-label="Primary Navigation">
+            <ul>
+                <li><a href="index.html" aria-label="Home">Home</a></li>
+                <li><a href="products.html" aria-label="Products">Products</a></li>
+                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
+                <li><a href="cart.html" aria-label="Cart">Cart</a></li>
+                <li><a href="account.html" aria-label="My Account">My Account</a></li>
+            </ul>
+        </nav>
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="cart.html">Cart</a></li>
+                <li aria-current="page">Checkout</li>
+            </ol>
+        </nav>
+    </header>
+    <main id="mainContent">
+        <h2>Order Summary</h2>
+        <div id="orderSummary" aria-live="polite">
+            <!-- Order summary will be displayed here -->
+        </div>
+        <h2>Shipping Information</h2>
+        <form id="checkoutForm" novalidate>
+            <label for="fullName">Full Name:</label>
+            <input type="text" id="fullName" name="fullName" required aria-label="Enter your full name" aria-required="true" aria-describedby="fullNameError">
+            <div id="fullNameError" role="alert" aria-live="assertive"></div>
+            
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required aria-label="Enter your address" aria-required="true" aria-describedby="addressError">
+            <div id="addressError" role="alert" aria-live="assertive"></div>
+            
+            <label for="city">City:</label>
+            <input type="text" id="city" name="city" required aria-label="Enter your city" aria-required="true" aria-describedby="cityError">
+            <div id="cityError" role="alert" aria-live="assertive"></div>
+            
+            <label for="postalCode">Postal Code:</label>
+            <input type="text" id="postalCode" name="postalCode" required aria-label="Enter your postal code" aria-required="true" aria-describedby="postalCodeError">
+            <div id="postalCodeError" role="alert" aria-live="assertive"></div>
+            
+            <label for="country">Country:</label>
+            <input type="text" id="country" name="country" required aria-label="Enter your country" aria-required="true" aria-describedby="countryError">
+            <div id="countryError" role="alert" aria-live="assertive"></div>
+            
+            <h2>Payment Information</h2>
+            <div id="card-element"><!-- Stripe.js will insert the Card Element --></div>
+            <div id="card-errors" role="alert"></div>
+            
+            <button type="submit" class="btn" aria-label="Place Order">Place Order</button>
+        </form>
+        <p id="successMessage" style="display:none;">Thank you for your purchase! Your order has been placed successfully.</p>
+        <div id="toast" aria-live="assertive"></div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
+    </footer>
+    <script type="module" src="checkout.js"></script>
+</body>
+</html>

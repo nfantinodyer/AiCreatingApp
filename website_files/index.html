@@ -10,14 +10,24 @@
     <meta property="og:description" content="Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!">
     <meta property="og:image" content="images/banana_shop.jpg">
     <meta name="theme-color" content="#ffeb3b">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' https://your-cdn.com data:;
+        script-src 'self' https://www.google.com/recaptcha/;
+        style-src 'self' 'unsafe-inline';
+        font-src 'self';
+        connect-src 'self' https://api.yourdomain.com;
+    ">
     <link rel="stylesheet" href="style.css">
+    <link rel="canonical" href="https://yourdomain.com/index.html">
+    <meta name="robots" content="index, follow">
     <title>Banana Shop</title>
     <script type="application/ld+json">
     {
       "@context": "http://schema.org",
       "@type": "Store",
       "name": "Banana Shop",
-      "image": "https://example.com/images/banana_shop.jpg",
+      "image": "https://yourdomain.com/images/banana_shop.jpg",
       "description": "Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!",
       "address": {
         "@type": "PostalAddress",
@@ -25,30 +35,115 @@
         "addressLocality": "Fruitville",
         "postalCode": "12345",
         "addressCountry": "US"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://yourdomain.com/index.html"
+          }
+        ]
       }
     }
     </script>
 </head>
 <body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
     <header>
         <h1>Welcome to the Banana Shop</h1>
-        <nav>
+        <nav role="navigation" aria-label="Primary Navigation">
             <ul>
                 <li><a href="index.html" aria-label="Home" class="active">Home</a></li>
                 <li><a href="products.html" aria-label="Products">Products</a></li>
                 <li><a href="contact.html" aria-label="Contact">Contact</a></li>
                 <li><a href="cart.html" aria-label="Cart">Cart</a></li>
+                <li><a href="account.html" aria-label="My Account">My Account</a></li>
             </ul>
         </nav>
+        <nav aria-label="Breadcrumb">
+            <ol class="breadcrumb">
+                <li aria-current="page">Home</li>
+            </ol>
+        </nav>
+        <div class="cart-icon">
+            <a href="cart.html" aria-label="Cart">
+                <img src="images/cart-icon.svg" alt="Cart">
+                <span id="cart-count">0</span>
+            </a>
+        </div>
     </header>
-    <main>
+    <main id="mainContent">
         <h2>Fresh Bananas for Sale!</h2>
+        <div class="hero">
+            <img src="images/hero-bananas.jpg" alt="Assorted Fresh Bananas" srcset="images/hero-bananas-small.jpg 600w, images/hero-bananas.jpg 1200w" sizes="(max-width: 600px) 600px, 1200px" loading="lazy">
+        </div>
         <p>Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!</p>
         <a href="products.html" class="btn" aria-label="View Products">View Products</a>
+        
+        <!-- Featured Products Section -->
+        <section id="featured-products">
+            <h3>Featured Products</h3>
+            <div class="product-list">
+                <article class="product">
+                    <figure>
+                        <img src="images/organic_bananas.jpg" alt="Organic Bananas - Freshly picked organic bananas from local farms" srcset="images/organic_bananas-small.jpg 600w, images/organic_bananas.jpg 1200w" sizes="(max-width: 600px) 600px, 1200px" loading="lazy">
+                        <figcaption>Freshly picked organic bananas from local farms.</figcaption>
+                    </figure>
+                    <h4>Organic Bananas</h4>
+                    <p>Price: $1.00 each</p>
+                    <a href="products.html#Organic-Bananas" class="btn" aria-label="View Organic Bananas">View Product</a>
+                </article>
+                <article class="product">
+                    <figure>
+                        <img src="images/golden_bananas.jpg" alt="Golden Bananas - Sweet golden bananas with a delightful flavor" srcset="images/golden_bananas-small.jpg 600w, images/golden_bananas.jpg 1200w" sizes="(max-width: 600px) 600px, 1200px" loading="lazy">
+                        <figcaption>Sweet golden bananas with a delightful flavor.</figcaption>
+                    </figure>
+                    <h4>Golden Bananas</h4>
+                    <p>Price: $0.80 each</p>
+                    <a href="products.html#Golden-Bananas" class="btn" aria-label="View Golden Bananas">View Product</a>
+                </article>
+            </div>
+        </section>
+        
+        <!-- Customer Testimonials -->
+        <section id="testimonials">
+            <h3>What Our Customers Say</h3>
+            <blockquote>
+                "The best bananas I've ever tasted! Fresh and sweet every time." - Jane Doe
+            </blockquote>
+            <blockquote>
+                "Excellent quality and fast delivery. Highly recommend Banana Shop." - John Smith
+            </blockquote>
+        </section>
+        
+        <!-- Newsletter Signup -->
+        <section id="newsletter">
+            <h3>Subscribe to Our Newsletter</h3>
+            <form id="newsletterForm" novalidate>
+                <label for="newsletterEmail">Email:</label>
+                <input type="email" id="newsletterEmail" name="newsletterEmail" required aria-label="Enter your email to subscribe" aria-required="true" aria-describedby="newsletterEmailError">
+                <div id="newsletterEmailError" role="alert" aria-live="assertive"></div>
+                <button type="submit" class="btn" aria-label="Subscribe to Newsletter">Subscribe</button>
+            </form>
+        </section>
+        
+        <!-- Social Media Links -->
+        <section id="social-media">
+            <h3>Follow Us</h3>
+            <a href="https://facebook.com" target="_blank" aria-label="Banana Shop on Facebook">Facebook</a> |
+            <a href="https://twitter.com" target="_blank" aria-label="Banana Shop on Twitter">Twitter</a> |
+            <a href="https://instagram.com" target="_blank" aria-label="Banana Shop on Instagram">Instagram</a>
+        </section>
+        
+        <div id="toast" aria-live="assertive"></div>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script src="script.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 </html>
