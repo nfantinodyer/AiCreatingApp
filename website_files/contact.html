@@ -11,12 +11,13 @@
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' https://your-cdn.com data:;
-        script-src 'self' https://www.google.com/recaptcha/;
-        style-src 'self' 'unsafe-inline';
+        script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
+        style-src 'self';
         font-src 'self';
         connect-src 'self' https://api.yourdomain.com;
+        frame-src 'self' https://www.google.com/recaptcha/;
     ">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="canonical" href="https://yourdomain.com/contact.html">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <meta name="robots" content="index, follow">
@@ -59,6 +60,9 @@
     <main id="mainContent">
         <h2>Get in Touch</h2>
         <form id="contactForm" novalidate>
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
             <label for="subject">Subject:</label>
             <select id="subject" name="subject" required aria-label="Select subject" aria-required="true" aria-describedby="subjectError">
                 <option value="" disabled selected>Select an option</option>
@@ -82,7 +86,7 @@
             <div id="messageError" role="alert" aria-live="assertive"></div>
             
             <!-- Google reCAPTCHA -->
-            <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+            <div class="g-recaptcha" data-sitekey="your-site-key"></div>
             <div id="captchaError" role="alert" aria-live="assertive"></div>
             
             <button type="submit" class="btn" aria-label="Send Message">Send Message</button>
@@ -93,6 +97,6 @@
         <p>&copy; 2023 Banana Shop</p>
         <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script type="module" src="js/contact.js"></script>
+    <script type="module" src="contact.js"></script>
 </body>
 </html>

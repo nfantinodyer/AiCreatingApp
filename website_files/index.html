@@ -13,12 +13,12 @@
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' https://your-cdn.com data:;
-        script-src 'self' https://www.google.com/recaptcha/;
-        style-src 'self' 'unsafe-inline';
+        script-src 'self';
+        style-src 'self';
         font-src 'self';
         connect-src 'self' https://api.yourdomain.com;
     ">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="canonical" href="https://yourdomain.com/index.html">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
     <meta name="robots" content="index, follow">
@@ -124,6 +124,8 @@
         <section id="newsletter">
             <h3>Subscribe to Our Newsletter</h3>
             <form id="newsletterForm" novalidate>
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="newsletterEmail">Email:</label>
                 <input type="email" id="newsletterEmail" name="newsletterEmail" required aria-label="Enter your email to subscribe" aria-required="true" aria-describedby="newsletterEmailError">
                 <div id="newsletterEmailError" role="alert" aria-live="assertive"></div>
@@ -145,6 +147,6 @@
         <p>&copy; 2023 Banana Shop</p>
         <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script type="module" src="js/index.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 </html>

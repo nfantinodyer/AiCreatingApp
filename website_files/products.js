@@ -1,5 +1,5 @@
-import { showToast, escapeHTML } from '../utils.js';
-import { PRODUCTS } from '../productsData.js';
+import { showToast, escapeHTML } from './utils.js';
+import { PRODUCTS } from './productsData.js';
 import { CartModule } from './cart.js';
 
 const ProductModule = (function() {

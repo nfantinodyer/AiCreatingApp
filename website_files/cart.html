@@ -12,11 +12,11 @@
         default-src 'self';
         img-src 'self' https://your-cdn.com data:;
         script-src 'self' https://js.stripe.com https://www.google.com/recaptcha/;
-        style-src 'self' 'unsafe-inline';
+        style-src 'self';
         font-src 'self';
         connect-src 'self' https://api.yourdomain.com;
     ">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="canonical" href="https://yourdomain.com/cart.html">
     <meta name="robots" content="index, follow">
     <title>Your Cart - Banana Shop</title>
@@ -64,9 +64,14 @@
         
         <!-- Coupon Code Section -->
         <section id="coupon-section">
-            <label for="couponCode">Coupon Code:</label>
-            <input type="text" id="couponCode" name="couponCode" aria-label="Enter coupon code">
-            <button class="btn" id="applyCouponButton" aria-label="Apply Coupon">Apply</button>
+            <h3>Apply a Coupon Code</h3>
+            <form id="couponForm" method="post" action="/apply-coupon">
+                <label for="couponCode">Coupon Code:</label>
+                <input type="text" id="couponCode" name="couponCode" aria-label="Enter coupon code">
+                <!-- CSRF Token -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn" id="applyCouponButton" aria-label="Apply Coupon">Apply</button>
+            </form>
         </section>
         
         <button class="btn" aria-label="Proceed to Checkout" id="checkoutButton">Proceed to Checkout</button>
@@ -77,6 +82,6 @@
         <p>&copy; 2023 Banana Shop</p>
         <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
-    <script type="module" src="js/cart.js"></script>
+    <script type="module" src="cart.js"></script>
 </body>
 </html>

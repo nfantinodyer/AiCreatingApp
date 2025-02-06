@@ -1,6 +1,6 @@
-import { PRODUCTS } from './productsData.js';
-import { COUPONS } from './couponsData.js';
-import { showToast, escapeHTML } from './utils.js';
+import { PRODUCTS } from './js/productsData.js';
+import { COUPONS } from './js/couponsData.js';
+import { showToast, escapeHTML } from './js/utils.js';
 
 let cart = [];
 let appliedCoupons = [];
