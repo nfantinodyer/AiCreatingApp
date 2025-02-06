@@ -1,4 +1,6 @@
-The only difference between the original code and the revisions provided by the reviewers is the addition of the JavaScript file link in the "index.html" file by Reviewer 2. This is a valid improvement if there's any JavaScript functionality needed on the "index.html" page. Therefore, the final version of the code is as follows:
+Both reviewers have made the same suggestion: to include the "script.js" file in the "index.html" file. This change is valid if there are any functionalities in "script.js" that need to be used in "index.html". 
+
+Here is the final version of the code:
 
 ```json
 {
