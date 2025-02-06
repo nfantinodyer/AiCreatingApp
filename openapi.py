@@ -149,8 +149,9 @@ def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
         "### filename: <filename> ###\n"
         "<file content>\n"
         "### end ###\n\n"
-        "Please compare the code from both reviewers and merge the best improvements. "
+        "Please compare the code from both reviewers and merge the best improvements while keeping the original functionality. "
         "Return a final version in the same format, containing only the code and no additional commentary."
+        "Be sure to incorporate the best suggestions from both reviewers and maintain the original functionality. Or fix things according to the prompts and improvements.\n\n"
         "\n\nOriginal Code:\n" + original_code +
         "\n\nReviewer 1 Revised Code:\n" + review1 +
         "\n\nReviewer 2 Revised Code:\n" + review2
@@ -164,7 +165,7 @@ def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
 def gap_analysis(code_text, model=DEFAULT_MODEL):
     analysis_prompt = (
         "Please review the following code for a website for selling bananas. "
-        "Identify any missing features or improvements, and provide suggestions on what to add or fix. Do not include any security additions in your response.\n\n"
+        "Identify any missing features or improvements, and provide suggestions on what to add or fix. Do not include any security additions in your response. Before adding more functions, be sure to fix the current issues. It's important to have a working foundation before adding more features, so please limit your additions, escpecially if they are not important.\n\n"
         + code_text
     )
     response = openai.chat.completions.create(
