@@ -1,8 +1,9 @@
 import { PRODUCTS } from './productsData.js';
+import { COUPONS } from './couponsData.js';
 import { showToast, escapeHTML } from './utils.js';
 
 let cart = [];
-let discount = 0;
+let appliedCoupons = [];
 
 const CartModule = (function() {
     function addToCart(product, quantity) {
@@ -35,7 +36,13 @@ const CartModule = (function() {
         let totalPrice = 0;
         cart.forEach((item, index) => {
             const pricePerUnit = PRODUCTS[item.product].price;
-            const subtotal = pricePerUnit * item.quantity * (1 - discount);
+            let subtotal = pricePerUnit * item.quantity;
+            appliedCoupons.forEach(coupon => {
+                if (coupon.type === 'percentage') {
+                    subtotal *= (1 - coupon.value);
+                }
+                // Add other coupon types if necessary
+            });
             totalPrice += subtotal;
             const productImage = PRODUCTS[item.product].image;
             cartDiv.innerHTML += `
@@ -55,8 +62,13 @@ const CartModule = (function() {
                     </div>
                 </div>`;
         });
-        if (discount > 0) {
-            cartDiv.innerHTML += `<p><strong>Discount Applied: ${discount * 100}%</strong></p>`;
+        if (appliedCoupons.length > 0) {
+            appliedCoupons.forEach(coupon => {
+                if (coupon.type === 'percentage') {
+                    cartDiv.innerHTML += `<p><strong>Discount Applied (${escapeHTML(coupon.code)}): ${coupon.value * 100}%</strong></p>`;
+                }
+                // Handle other coupon types
+            });
         }
         if (cart.length === 0) {
             if (checkoutButton) checkoutButton.disabled = true;
@@ -94,17 +106,19 @@ const CartModule = (function() {
 
     function applyCoupon() {
         const couponCode = document.getElementById('couponCode').value.trim().toUpperCase();
-        if (couponCode === 'BANANA10') {
-            if (discount === 0) {
-                discount = 0.10;
-                saveCart();
-                displayCart();
-                showToast('Coupon applied! 10% discount on all products.', 'success');
-            } else {
+        const coupon = COUPONS[couponCode];
+        const today = new Date();
+        if (coupon && new Date(coupon.expires) > today) {
+            if (appliedCoupons.find(c => c.code === couponCode)) {
                 showToast('Coupon already applied.', 'info');
+                return;
             }
+            appliedCoupons.push(coupon);
+            saveCart();
+            displayCart();
+            showToast(`Coupon ${couponCode} applied!`, 'success');
         } else {
-            showToast('Invalid coupon code.', 'error');
+            showToast('Invalid or expired coupon code.', 'error');
         }
     }
 
@@ -119,7 +133,7 @@ const CartModule = (function() {
     function saveCart() {
         try {
             localStorage.setItem('cart', JSON.stringify(cart));
-            localStorage.setItem('discount', discount);
+            localStorage.setItem('appliedCoupons', JSON.stringify(appliedCoupons));
         } catch (e) {
             console.error('Could not save cart', e);
             showToast('Failed to save cart. Please try again.', 'error');
@@ -128,7 +142,7 @@ const CartModule = (function() {
 
     function loadCart() {
         const savedCart = localStorage.getItem('cart');
-        const savedDiscount = localStorage.getItem('discount');
+        const savedCoupons = localStorage.getItem('appliedCoupons');
         if (savedCart) {
             try {
                 cart = JSON.parse(savedCart);
@@ -138,8 +152,14 @@ const CartModule = (function() {
                 saveCart();
             }
         }
-        if (savedDiscount) {
-            discount = parseFloat(savedDiscount);
+        if (savedCoupons) {
+            try {
+                appliedCoupons = JSON.parse(savedCoupons);
+            } catch (e) {
+                console.error('Could not parse coupons data', e);
+                appliedCoupons = [];
+                saveCart();
+            }
         }
         displayCart();
     }
@@ -177,13 +197,13 @@ const CartModule = (function() {
 
     function clearCart() {
         cart = [];
-        discount = 0;
+        appliedCoupons = [];
         saveCart();
         displayCart();
     }
 
     window.addEventListener('storage', (event) => {
-        if (event.key === 'cart' || event.key === 'discount') {
+        if (event.key === 'cart' || event.key === 'appliedCoupons') {
             loadCart();
         }
     });

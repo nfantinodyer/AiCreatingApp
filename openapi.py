@@ -59,19 +59,11 @@ def parse_files(text):
     ### end ###
     
     Returns a dictionary mapping filenames to their content.
-    If the first and last lines of the file's content consist solely of triple backticks (```),
-    they are removed.
     """
     pattern = r"### filename: (.*?) ###\s*(.*?)\s*### end ###"
     matches = re.findall(pattern, text, flags=re.DOTALL)
     result = {}
     for filename, content in matches:
-        lines = content.splitlines()
-        # Check if there are at least two lines and both the first and last lines are exactly "```"
-        if len(lines) >= 2 and lines[0].strip() == "```" and lines[-1].strip() == "```":
-            content = "\n".join(lines[1:-1])
-        else:
-            content = "\n".join(lines)
         result[filename.strip()] = content.strip()
     return result
 
@@ -100,7 +92,7 @@ def write_files(file_dict, output_directory):
 
 # --- Model Call Functions (using o1-mini or o1-preview) ---
 # Set the default model to use. Change this to "o1-preview" if desired.
-DEFAULT_MODEL = "o1-mini"
+DEFAULT_MODEL = "o1-preview"
 
 def generate_initial_code(prompt, model=DEFAULT_MODEL):
     full_prompt = (
@@ -132,7 +124,7 @@ def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     )
     return response.choices[0].message.content
 
-def aggregate_reviews(original_code, review1, review2, model=DEFAULT_MODEL):
+def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
     aggregator_prompt = (
         "I have an original piece of code and two revised versions provided by independent reviewers. "
         "Each is in the following format:\n"

@@ -1,11 +1,18 @@
-import { showToast, escapeHTML } from './utils.js';
-import { PRODUCTS } from './productsData.js';
+import { showToast, escapeHTML } from '../utils.js';
+import { PRODUCTS } from '../productsData.js';
 import { CartModule } from './cart.js';
 
 const ProductModule = (function() {
     let currentPage = 1;
     const itemsPerPage = 4;
     let filteredProducts = Object.keys(PRODUCTS);
+
+    function init() {
+        setupSearchFilter();
+        setupPagination();
+        loadProducts();
+        CartModule.displayCart();
+    }
 
     function loadProducts() {
         const productList = document.getElementById('product-list');
@@ -83,8 +90,9 @@ const ProductModule = (function() {
         const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
         const filterValue = document.getElementById('filterSelect').value;
         filteredProducts = Object.keys(PRODUCTS).filter(productName => {
+            const product = PRODUCTS[productName];
             const matchesSearch = productName.toLowerCase().includes(searchTerm);
-            const matchesFilter = filterValue === 'all' || productName.toLowerCase().includes(filterValue);
+            const matchesFilter = filterValue === 'all' || product.category === filterValue;
             return matchesSearch && matchesFilter;
         });
         currentPage = 1;
@@ -108,18 +116,12 @@ const ProductModule = (function() {
     }
 
     return {
-        loadProducts,
-        setupPagination,
-        setupSearchFilter,
-        updateProducts
+        init
     };
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.endsWith('products.html')) {
-        ProductModule.setupSearchFilter();
-        ProductModule.setupPagination();
-        ProductModule.updateProducts();
-        CartModule.displayCart();
+        ProductModule.init();
     }
 });

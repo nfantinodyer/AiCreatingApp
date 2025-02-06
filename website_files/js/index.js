@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Product Features if on Index Page
     if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
         // Example: Highlight featured products or similar
+        initializeFeaturedProducts();
     }
 });
 
@@ -25,10 +26,19 @@ function handleNewsletterForm(event) {
     if (!emailPattern.test(email)) {
         showToast('Please enter a valid email address.', 'error');
         document.getElementById('newsletterEmailError').textContent = 'Invalid email.';
+        emailInput.setAttribute('aria-invalid', 'true');
         return;
+    } else {
+        document.getElementById('newsletterEmailError').textContent = '';
+        emailInput.removeAttribute('aria-invalid');
     }
 
     // Here you would typically send the email to the server
     showToast('Thank you for subscribing to our newsletter!', 'success');
     newsletterForm.reset();
+}
+
+function initializeFeaturedProducts() {
+    // Example: You can add scripts to highlight featured products, animate them or similar
+    console.log('Featured products initialized.');
 }

@@ -5,6 +5,12 @@
     --background-color: #fff8e1;
     --accent-color: #ff9800;
     --font-family: 'Arial, sans-serif';
+    --error-color: #f44336;
+    --success-color: #4caf50;
+    --info-color: #2196f3;
+    --toast-duration: 5000ms;
+    --spinner-border: 8px solid #f3f3f3;
+    --spinner-top-border: var(--secondary-color);
 }
 
 body {
@@ -37,6 +43,7 @@ header {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 }
 
 nav ul {
@@ -89,6 +96,11 @@ nav ul li a.active {
     right: 20px;
 }
 
+.cart-icon a {
+    position: relative;
+    display: inline-block;
+}
+
 .cart-icon img {
     width: 30px;
     height: 30px;
@@ -99,9 +111,9 @@ nav ul li a.active {
     color: white;
     border-radius: 50%;
     padding: 2px 6px;
-    position: relative;
+    position: absolute;
     top: -10px;
-    left: -10px;
+    right: -10px;
     font-size: 0.8em;
 }
 
@@ -127,6 +139,12 @@ main {
     box-sizing: border-box;
     background-color: #fff;
     border-radius: 10px;
+    transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .product img {
@@ -234,101 +252,11 @@ button:hover {
     .product {
         width: 90%;
     }
-}
 
-/* Cart Styling */
-.cart-item {
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ccc;
-    padding: 10px 0;
-}
-
-.cart-image {
-    width: 100px;
-    height: auto;
-    margin-right: 20px;
-    border-radius: 5px;
-}
-
-.cart-details {
-    flex-grow: 1;
-    text-align: left;
-}
-
-#coupon-section {
-    margin: 20px 0;
-}
-
-#coupon-section input {
-    width: 200px;
-    display: inline-block;
-}
-
-#search-filter {
-    margin-bottom: 20px;
-}
-
-#search-filter input,
-#search-filter select {
-    padding: 8px;
-    margin-right: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
-#testimonials blockquote {
-    font-style: italic;
-    margin: 20px auto;
-    max-width: 600px;
-    position: relative;
-    padding-left: 20px;
-}
-
-#testimonials blockquote::before {
-    content: "“";
-    font-size: 50px;
-    position: absolute;
-    left: 0;
-    top: -10px;
-    color: var(--accent-color);
-}
-
-#testimonials blockquote::after {
-    content: "”";
-    font-size: 50px;
-    position: absolute;
-    right: 0;
-    bottom: -10px;
-    color: var(--accent-color);
-}
-
-#newsletter {
-    background-color: #fff3e0;
-    padding: 20px;
-    border-radius: 10px;
-    margin: 20px auto;
-    max-width: 500px;
-}
-
-#newsletterForm input {
-    margin-bottom: 10px;
-}
-
-#newsletterEmailError {
-    color: red;
-    font-size: 0.9em;
-}
-
-#social-media a {
-    margin: 0 10px;
-    text-decoration: none;
-    color: var(--accent-color);
-    transition: color 0.3s;
-}
-
-#social-media a:hover {
-    color: var(--secondary-color);
+    #cart-count {
+        font-size: 0.7em;
+        padding: 1px 4px;
+    }
 }
 
 /* Enhanced Form Focus Styles */
@@ -349,21 +277,21 @@ input:focus, textarea:focus, select:focus {
 
 /* Toast Notification Types */
 .toast.success {
-    background-color: #4caf50;
+    background-color: var(--success-color);
 }
 
 .toast.error {
-    background-color: #f44336;
+    background-color: var(--error-color);
 }
 
 .toast.info {
-    background-color: #2196f3;
+    background-color: var(--info-color);
 }
 
 /* Loading Spinner */
 .spinner {
-    border: 8px solid #f3f3f3;
-    border-top: 8px solid var(--secondary-color);
+    border: var(--spinner-border);
+    border-top: var(--spinner-top-border);
     border-radius: 50%;
     width: 60px;
     height: 60px;
