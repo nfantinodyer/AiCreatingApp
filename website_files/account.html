@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Banana Shop</title>
+    <meta name="description" content="View and manage your Banana Shop account details, order history, and settings.">
+    <meta name="keywords" content="Account, Banana Shop, User Account, Order History">
+    <meta name="author" content="Banana Shop">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <header>
+        <h1>My Account</h1>
+        <nav role="navigation" aria-label="Primary Navigation">
+            <ul id="nav-menu">
+                <!-- Navigation links will be dynamically loaded -->
+            </ul>
+        </nav>
+    </header>
+    <main id="mainContent">
+        <h2>Welcome, <span id="userName"></span></h2>
+        <p>Here you can view and manage your account details.</p>
+
+        <section id="account-details">
+            <h3>Account Details</h3>
+            <form id="accountDetailsForm">
+                <label for="fullName">Full Name:</label>
+                <input type="text" id="fullName" name="fullName" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <button type="submit" class="btn">Update Details</button>
+            </form>
+        </section>
+
+        <section id="change-password">
+            <h3>Change Password</h3>
+            <form id="changePasswordForm">
+                <label for="currentPassword">Current Password:</label>
+                <input type="password" id="currentPassword" name="currentPassword" required>
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+                <label for="confirmNewPassword">Confirm New Password:</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+                <button type="submit" class="btn">Change Password</button>
+            </form>
+        </section>
+
+        <section id="order-history">
+            <h3>Order History</h3>
+            <div id="orderHistoryList">
+                <!-- Order history will be displayed here -->
+            </div>
+        </section>
+
+        <button id="logoutButton" class="btn">Logout</button>
+        <div id="toast" aria-live="assertive"></div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a></p>
+    </footer>
+    <script src="nav.js"></script>
+    <script type="module" src="account.js"></script>
+</body>
+</html>

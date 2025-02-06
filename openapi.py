@@ -90,9 +90,9 @@ def write_files(file_dict, output_directory):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
-# --- Model Call Functions (using o1-mini or o1-preview) ---
-# Set the default model to use. Change this to "o1-preview" if desired.
-DEFAULT_MODEL = "o1-preview"
+# --- Model Call Functions (using o1-mini or o1-mini) ---
+# Set the default model to use. Change this to "o1-mini" if desired.
+DEFAULT_MODEL = "gpt-4o"
 
 def generate_initial_code(prompt, model=DEFAULT_MODEL):
     full_prompt = (
@@ -103,6 +103,8 @@ def generate_initial_code(prompt, model=DEFAULT_MODEL):
         "Then on subsequent lines, output the file content, and then output a line:\n"
         "### end ###\n"
         "Do not include any additional commentary."
+        "Include everything that exists in the file already if you are not changing it."
+        "Do not include any comments."
     )
     # Use only a user message (no system message)
     response = openai.chat.completions.create(
@@ -135,6 +137,8 @@ def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
         "Return the corrected code in the same format as provided below. Do not include any commentary.\n\n"
         "Here is the code:\n" + code + "\n\n"
         "Use the same format: each file begins with a line '### filename: <filename> ###', then its content, then '### end ###'."
+        "Include everything that exists in the file already if you are not changing it."
+        "Do not include any comments."
     )
     response = openai.chat.completions.create(
         model=model,
@@ -142,7 +146,7 @@ def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     )
     return response.choices[0].message.content
 
-def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
+def aggregate_reviews(original_code, review1, review2, model="o1-mini"):
     aggregator_prompt = (
         "I have an original piece of code and two revised versions provided by independent reviewers. "
         "Each is in the following format:\n"
@@ -151,6 +155,7 @@ def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
         "### end ###\n\n"
         "Please compare the code from both reviewers and merge the best improvements while keeping the original functionality. "
         "Return a final version in the same format, containing only the code and no additional commentary."
+        "Do not include any comments what so ever, and if the comment would have been: <!-- ... -->, or <!-- Meta tags as per previous pages -->, then don't mention anything at all. The way the program works is that if you type in the ###filename and ###end, it will automatically overwrite everything on there with whatever you have in your repsonse. So if your response is comments then it writes the file as comments instead of the code that it should be. Your job is to make sure that there is code on each file being written to. If you recieve comments from the reviewers that you inspect, then please ignore them and MENTION NOTHING. I do not need any feed back what so ever, I just need the code. \n\n"
         "Be sure to incorporate the best suggestions from both reviewers and maintain the original functionality. Or fix things according to the prompts and improvements.\n\n"
         "\n\nOriginal Code:\n" + original_code +
         "\n\nReviewer 1 Revised Code:\n" + review1 +
@@ -185,7 +190,7 @@ base_prompt = (
     "Include a homepage, product listing, and a contact form."
 )
 
-max_iterations = 5
+max_iterations = 15
 iteration = 0
 previous_aggregated_code = ""
 
@@ -221,8 +226,8 @@ while iteration < max_iterations:
     print("Initial Code Generation Begins")
     initial_code_output = generate_initial_code(updated_prompt)
     initial_files = parse_files(initial_code_output)
-    write_files(initial_files, WEBSITE_DIR)
-    remove_triple_backtick_lines(WEBSITE_DIR)
+    #write_files(initial_files, WEBSITE_DIR)
+    #remove_triple_backtick_lines(WEBSITE_DIR)
     print("Initial Code Generation Ends")
 
     # --- Step 2: Reviews ---

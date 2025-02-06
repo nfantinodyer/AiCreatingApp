@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bananas - Banana Shop</title>
+    <meta name="description" content="Discover our delicious golden bananas with a delightful flavor, perfect for snacking and desserts.">
+    <meta name="keywords" content="Golden Bananas, Sweet Bananas, Banana Shop">
+    <meta name="author" content="Banana Shop">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <header>
+        <h1>Golden Bananas</h1>
+        <nav role="navigation" aria-label="Primary Navigation">
+            <ul id="nav-menu">
+            </ul>
+        </nav>
+    </header>
+    <main id="mainContent">
+        <figure>
+            <img id="productImage" src="images/golden_bananas.jpg" alt="Golden Bananas">
+            <figcaption>Sweet golden bananas with a delightful flavor.</figcaption>
+        </figure>
+        <h2 id="productName">Golden Bananas</h2>
+        <p id="productDescription">Sweet golden bananas with a delightful flavor. Perfect for snacking and desserts!</p>
+        <p id="productPrice">$0.80 each</p>
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" value="1" min="1" max="10">
+        <button id="addToCartButton" class="btn">Add to Cart</button>
+        <section id="customerReviews">
+            <h3>Customer Reviews</h3>
+        </section>
+        <form id="reviewForm">
+            <h4>Leave a Review</h4>
+            <label for="reviewerName">Name:</label>
+            <input type="text" id="reviewerName" name="reviewerName" required>
+            <label for="reviewText">Review:</label>
+            <textarea id="reviewText" name="reviewText" required></textarea>
+            <button type="submit" class="btn">Submit Review</button>
+        </form>
+        <div id="toast" aria-live="assertive"></div>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Shop</p>
+        <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a></p>
+    </footer>
+    <script src="nav.js"></script>
+    <script type="module" src="product.js"></script>
+</body>
+</html>

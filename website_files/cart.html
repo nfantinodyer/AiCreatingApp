@@ -35,14 +35,7 @@
     <header>
         <h1>Your Shopping Cart</h1>
         <nav role="navigation" aria-label="Primary Navigation">
-            <ul>
-                <li><a href="index.html" aria-label="Home">Home</a></li>
-                <li><a href="products.html" aria-label="Products">Products</a></li>
-                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
-                <li><a href="cart.html" aria-label="Cart" class="active">Cart</a></li>
-                <li><a href="login.html" aria-label="Login">Login</a></li>
-                <li><a href="register.html" aria-label="Register">Register</a></li>
-                <li><a href="account.html" aria-label="My Account">My Account</a></li>
+            <ul id="nav-menu">
             </ul>
         </nav>
         <nav aria-label="Breadcrumb">
@@ -61,10 +54,8 @@
     <main id="mainContent">
         <h2>Your Cart Items</h2>
         <div id="cartItems" aria-live="polite">
-            <!-- Cart items will be displayed here -->
         </div>
         <p id="totalPrice"></p>
-        <!-- Coupon Code Section -->
         <section id="coupon-section">
             <h3>Apply a Coupon Code</h3>
             <form id="couponForm">
@@ -81,6 +72,7 @@
         <p>&copy; 2023 Banana Shop</p>
         <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
     </footer>
+    <script src="nav.js"></script>
     <script type="module" src="cart.js"></script>
 </body>
 </html>

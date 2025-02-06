@@ -3,32 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Products - Banana Shop</title>
-    <meta name="description" content="Explore our selection of fresh and organic bananas at Banana Shop. High-quality bananas directly from our farms to your table.">
-    <meta name="keywords" content="Bananas, Organic Bananas, Fresh Bananas, Banana Shop Products">
+    <title>Login - Banana Shop</title>
+    <meta name="description" content="Login to your Banana Shop account to view your order history, update account details and more.">
+    <meta name="keywords" content="Login, Banana Shop, User Account">
     <meta name="author" content="Banana Shop">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <a href="#mainContent" class="skip-link">Skip to main content</a>
     <header>
-        <h1>Our Products</h1>
+        <h1>Login</h1>
         <nav role="navigation" aria-label="Primary Navigation">
             <ul id="nav-menu">
             </ul>
         </nav>
     </header>
     <main id="mainContent">
-        <h2>Banana Varieties</h2>
-        <section id="productListing" class="product-list">
-        </section>
-        <div id="toast" aria-live="assertive"></div>
+        <form id="loginForm">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit" class="btn">Login</button>
+            <div id="loginMessage" aria-live="polite"></div>
+        </form>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>
         <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a></p>
     </footer>
     <script src="nav.js"></script>
-    <script type="module" src="products.js"></script>
+    <script type="module" src="login.js"></script>
 </body>
 </html>

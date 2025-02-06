@@ -3,180 +3,205 @@ import { PRODUCTS } from './productsData.js';
 import { COUPONS } from './couponsData.js';
 import { showToast, escapeHTML } from './utils.js';
 
-const stripe = Stripe('YOUR_PUBLIC_STRIPE_KEY');
-const elements = stripe.elements();
-const card = elements.create('card');
-card.mount('#card-element');
-
-card.on('change', function(event) {
-    const displayError = document.getElementById('card-errors');
-    if (event.error) {
-        displayError.textContent = escapeHTML(event.error.message);
-    } else {
-        displayError.textContent = '';
-    }
-});
-
-const checkoutForm = document.getElementById('checkoutForm');
-if (checkoutForm) {
-    checkoutForm.addEventListener('submit', handleFormSubmit);
-}
-
-function displayOrderSummary() {
-    const orderSummaryDiv = document.getElementById('orderSummary');
-    if (!orderSummaryDiv) return;
-
-    const cart = CartModule.getCart();
-    if (cart.length === 0) {
-        orderSummaryDiv.innerHTML = '<p>Your cart is empty.</p>';
-        return;
-    }
-
-    let summaryHTML = '<ul>';
-    let totalPrice = 0;
-    cart.forEach(item => {
-        const price = PRODUCTS[item.product].price;
-        let subtotal = price * item.quantity;
-        const appliedCoupons = getAppliedCoupons();
-        appliedCoupons.forEach(coupon => {
-            if (coupon.type === 'percentage') {
-                subtotal *= (1 - coupon.value);
-            }
-            // Handle other coupon types
-        });
-        totalPrice += subtotal;
-        summaryHTML += `<li>${escapeHTML(item.product)} - $${price.toFixed(2)} x ${item.quantity} = $${subtotal.toFixed(2)}</li>`;
-    });
-    const discountPercentage = getTotalDiscount();
-    if (discountPercentage > 0) {
-        summaryHTML += `<li><strong>Total Discount: ${(discountPercentage * 100).toFixed(0)}%</strong></li>`;
-    }
-    summaryHTML += `</ul><p><strong>Total: $${totalPrice.toFixed(2)}</strong></p>`;
-    orderSummaryDiv.innerHTML = summaryHTML;
-}
-
-function getAppliedCoupons() {
-    try {
-        const coupons = JSON.parse(localStorage.getItem('appliedCoupons')) || [];
-        return coupons;
-    } catch (e) {
-        console.error('Could not parse coupons data', e);
-        return [];
-    }
-}
-
-function getTotalDiscount() {
-    const coupons = getAppliedCoupons();
-    let discountMultiplier = 1;
-    coupons.forEach(coupon => {
-        if (coupon.type === 'percentage') {
-            discountMultiplier *= (1 - coupon.value);
+export const CheckoutModule = (function() {
+    function initializeCheckout() {
+        CartModule.loadCart();
+        const cart = CartModule.getCart();
+        if (cart.length === 0) {
+            showToast('Your cart is empty.', 'info');
+            setTimeout(() => {
+                window.location.href = 'cart.html';
+            }, 1000);
+            return;
         }
-        // Handle other coupon types
-    });
-    return 1 - discountMultiplier;
-}
 
-async function fetchClientSecret() {
-    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-    const response = await fetch('/create-payment-intent', { // Ensure server supports this endpoint
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify({ cart: CartModule.getCart(), coupons: getAppliedCoupons() })
-    });
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
+        displayOrderSummary();
+
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (checkoutForm) {
+            checkoutForm.addEventListener('submit', handleCheckoutForm);
+        }
     }
-    const data = await response.json();
-    return data.clientSecret;
-}
 
-async function handleFormSubmit(event) {
-    event.preventDefault();
-    const submitButton = checkoutForm.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    showToast('Processing your payment...', 'info');
+    function displayOrderSummary() {
+        const orderSummaryDiv = document.getElementById('orderSummary');
+        if (!orderSummaryDiv) return;
 
-    try {
-        const clientSecret = await fetchClientSecret();
-        const billingDetails = {
-            name: document.getElementById('fullName').value,
-            address: {
-                line1: document.getElementById('address').value,
-                city: document.getElementById('city').value,
-                postal_code: document.getElementById('postalCode').value,
-                country: document.getElementById('country').value
-            }
-        };
+        const cart = CartModule.getCart();
+        let summaryHTML = '<table><tr><th>Product</th><th>Quantity</th><th>Price</th></tr>';
+        let totalPrice = 0;
 
-        const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-            payment_method: {
-                card: card,
-                billing_details: billingDetails
-            }
+        cart.forEach(item => {
+            const product = PRODUCTS[item.productName];
+            const itemPrice = product.price * item.quantity;
+            totalPrice += itemPrice;
+            summaryHTML += `
+                <tr>
+                    <td>${escapeHTML(item.productName)}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${itemPrice.toFixed(2)}</td>
+                </tr>
+            `;
         });
 
-        const displayError = document.getElementById('card-errors');
-        if (error) {
-            showToast(escapeHTML(error.message), 'error');
-            displayError.textContent = escapeHTML(error.message);
-            submitButton.disabled = false;
-        } else if (paymentIntent.status === 'succeeded') {
-            document.getElementById('successMessage').classList.remove('hidden');
-            checkoutForm.style.display = 'none';
-            showToast('Your order has been placed successfully!', 'success');
+        let discount = 0;
+        let discountDescription = '';
+        let shippingCost = 5.00;
+        const storedCoupon = localStorage.getItem('appliedCoupon');
+        let appliedCoupon = storedCoupon ? JSON.parse(storedCoupon) : null;
+
+        if (appliedCoupon) {
+            const coupon = COUPONS[appliedCoupon.code];
+            if (coupon && new Date(coupon.expires) >= new Date()) {
+                if (coupon.type === 'percentage') {
+                    discount = totalPrice * coupon.value;
+                    discountDescription = `Discount (${coupon.value * 100}% off): -$${discount.toFixed(2)}`;
+                } else if (coupon.type === 'fixed') {
+                    discount = coupon.value;
+                    discountDescription = `Discount ($${coupon.value.toFixed(2)} off): -$${discount.toFixed(2)}`;
+                } else if (coupon.type === 'shipping') {
+                    shippingCost = 0;
+                    discountDescription = 'Free Shipping Applied';
+                }
+            } else {
+                appliedCoupon = null;
+                localStorage.removeItem('appliedCoupon');
+            }
+        }
+
+        if (discount > totalPrice) discount = totalPrice;
+
+        let finalTotal = totalPrice - discount + shippingCost;
+
+        summaryHTML += '</table>';
+        summaryHTML += `<p>Subtotal: $${totalPrice.toFixed(2)}</p>`;
+        if (discount > 0 || discountDescription) {
+            summaryHTML += `<p>${discountDescription}</p>`;
+        }
+        summaryHTML += `<p>Shipping: $${shippingCost.toFixed(2)}</p>`;
+        summaryHTML += `<p>Total Price: $${finalTotal.toFixed(2)}</p>`;
+        orderSummaryDiv.innerHTML = summaryHTML;
+    }
+
+    function handleCheckoutForm(event) {
+        event.preventDefault();
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const address = document.getElementById('address').value.trim();
+        const city = document.getElementById('city').value.trim();
+        const state = document.getElementById('state').value.trim();
+        const zip = document.getElementById('zip').value.trim();
+        const country = document.getElementById('country').value.trim();
+        const cardNumber = document.getElementById('cardNumber').value.trim();
+        const cardExpiry = document.getElementById('cardExpiry').value.trim();
+        const cardCVC = document.getElementById('cardCVC').value.trim();
+
+        if (!fullName || !email || !address || !city || !state || !zip || !country || !cardNumber || !cardExpiry || !cardCVC) {
+            showToast('Please fill in all required fields.', 'error');
+            return;
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email)) {
+            showToast('Please enter a valid email address.', 'error');
+            return;
+        }
+
+        const zipPattern = /^\d{5}$/;
+        if (!zipPattern.test(zip)) {
+            showToast('Please enter a valid ZIP code.', 'error');
+            return;
+        }
+
+        const cardNumberPattern = /^\d{16}$/;
+        if (!cardNumberPattern.test(cardNumber.replace(/\s+/g, ''))) {
+            showToast('Please enter a valid 16-digit card number.', 'error');
+            return;
+        }
+
+        const cardExpiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!cardExpiryPattern.test(cardExpiry)) {
+            showToast('Please enter a valid expiry date in MM/YY format.', 'error');
+            return;
+        }
+        const [expMonth, expYear] = cardExpiry.split('/').map(num => parseInt(num));
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth() + 1;
+        const currentYear = parseInt(currentDate.getFullYear().toString().substr(-2));
+        if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+            showToast('Your card expiry date is in the past.', 'error');
+            return;
+        }
+
+        const cardCVCPattern = /^\d{3,4}$/;
+        if (!cardCVCPattern.test(cardCVC)) {
+            showToast('Please enter a valid CVC code.', 'error');
+            return;
+        }
+
+        showToast('Processing your payment...', 'info');
+        setTimeout(() => {
+            showToast('Payment successful! Thank you for your purchase.', 'success');
+            saveOrderHistory();
             CartModule.clearCart();
-            submitButton.disabled = false;
-            updateOrderSchema(paymentIntent);
-            // Optionally redirect to order confirmation page
-            // window.location.href = 'order-confirmation.html';
-        }
-    } catch (err) {
-        console.error(err);
-        showToast('An unexpected error occurred. Please try again.', 'error');
-        submitButton.disabled = false;
+            localStorage.removeItem('appliedCoupon');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }, 2000);
     }
-}
 
-function updateOrderSchema(paymentIntent) {
-    const orderSchemaScript = document.createElement('script');
-    orderSchemaScript.type = 'application/ld+json';
-    const orderData = {
-        "@context": "http://schema.org",
-        "@type": "Order",
-        "orderStatus": "http://schema.org/OrderProcessing",
-        "orderDate": new Date().toISOString(),
-        "customer": {
-            "@type": "Person",
-            "name": document.getElementById('fullName').value
-        },
-        "acceptedOffer": CartModule.getCart().map(item => ({
-            "@type": "Offer",
-            "itemOffered": {
-                "@type": "Product",
-                "name": item.product,
-                "sku": PRODUCTS[item.product].sku,
-                "price": PRODUCTS[item.product].price.toFixed(2),
-                "priceCurrency": "USD"
-            },
-            "price": PRODUCTS[item.product].price.toFixed(2),
-            "priceCurrency": "USD",
-            "quantity": item.quantity
-        }))
+    function saveOrderHistory() {
+        const orderHistory = JSON.parse(localStorage.getItem('orderHistory')) || [];
+        const cart = CartModule.getCart();
+        let totalPrice = 0;
+
+        cart.forEach(item => {
+            const product = PRODUCTS[item.productName];
+            totalPrice += product.price * item.quantity;
+        });
+
+        let discount = 0;
+        let shippingCost = 5.00;
+        const storedCoupon = localStorage.getItem('appliedCoupon');
+        let appliedCoupon = storedCoupon ? JSON.parse(storedCoupon) : null;
+
+        if (appliedCoupon) {
+            const coupon = COUPONS[appliedCoupon.code];
+            if (coupon && new Date(coupon.expires) >= new Date()) {
+                if (coupon.type === 'percentage') {
+                    discount = totalPrice * coupon.value;
+                } else if (coupon.type === 'fixed') {
+                    discount = coupon.value;
+                } else if (coupon.type === 'shipping') {
+                    shippingCost = 0;
+                }
+            }
+        }
+
+        if (discount > totalPrice) discount = totalPrice;
+
+        let finalTotal = totalPrice - discount + shippingCost;
+
+        const newOrder = {
+            orderNumber: Date.now(),
+            date: new Date().toLocaleDateString(),
+            items: cart,
+            total: finalTotal,
+            discount: discount,
+            shippingCost: shippingCost
+        };
+        orderHistory.push(newOrder);
+        localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+    }
+
+    return {
+        initializeCheckout
     };
-    orderSchemaScript.textContent = JSON.stringify(orderData, null, 2);
-    document.head.appendChild(orderSchemaScript);
-}
-
-function initializeCheckout() {
-    displayOrderSummary();
-}
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.endsWith('checkout.html')) {
-        initializeCheckout();
+        CheckoutModule.initializeCheckout();
     }
 });

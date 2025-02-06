@@ -1,232 +1,202 @@
-import { PRODUCTS } from './js/productsData.js';
-import { COUPONS } from './js/couponsData.js';
-import { showToast, escapeHTML } from './js/utils.js';
+import { showToast, escapeHTML } from './utils.js';
+import { PRODUCTS } from './productsData.js';
+import { COUPONS } from './couponsData.js';
 
 export const CartModule = (function() {
     let cart = [];
-    let appliedCoupons = [];
+    let appliedCoupon = null;
 
-    function addToCart(product, quantity) {
-        if (quantity < 1 || quantity > 10) {
-            showToast('Please select a valid quantity between 1 and 10.', 'error');
-            return;
+    function loadCart() {
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+            cart = JSON.parse(storedCart);
         }
-        const cartItem = cart.find(item => item.product === product);
-        if (cartItem) {
-            if (cartItem.quantity + quantity > 10) {
-                showToast('Maximum quantity for this product is 10.', 'error');
-                return;
-            }
-            cartItem.quantity += quantity;
-        } else {
-            cart.push({ product, quantity });
+        const storedCoupon = localStorage.getItem('appliedCoupon');
+        if (storedCoupon) {
+            appliedCoupon = JSON.parse(storedCoupon);
         }
-        saveCart();
-        displayCart();
-        showToast(`${escapeHTML(product)} has been added to your cart!`, 'success');
-    }
-
-    function displayCart() {
-        const cartDiv = document.getElementById('cartItems');
-        const totalPriceDiv = document.getElementById('totalPrice');
-        const checkoutButton = document.getElementById('checkoutButton');
-        const emptyCartMessage = document.getElementById('emptyCartMessage');
-        const cartCount = document.getElementById('cart-count');
-        cartDiv.innerHTML = '';
-        let totalPrice = 0;
-        cart.forEach((item, index) => {
-            const pricePerUnit = PRODUCTS[item.product].price;
-            let subtotal = pricePerUnit * item.quantity;
-            appliedCoupons.forEach(coupon => {
-                if (coupon.type === 'percentage') {
-                    subtotal *= (1 - coupon.value);
-                }
-                // Add other coupon types if necessary
-            });
-            totalPrice += subtotal;
-            const productImage = PRODUCTS[item.product].image;
-            cartDiv.innerHTML += `
-                <div class="cart-item" role="region" aria-label="Cart item: ${escapeHTML(item.product)}">
-                    <img src="${escapeHTML(productImage)}" alt="${escapeHTML(item.product)}" class="cart-image" loading="lazy">
-                    <div class="cart-details">
-                        <p><strong>${escapeHTML(item.product)}</strong></p>
-                        <p>SKU: ${escapeHTML(PRODUCTS[item.product].sku)}</p>
-                        <p>Price: $${pricePerUnit.toFixed(2)} each</p>
-                        <label for="quantity-${index}" hidden>Quantity for ${escapeHTML(item.product)}</label>
-                        <p>
-                            Quantity: 
-                            <input type="number" id="quantity-${index}" value="${item.quantity}" min="1" max="10" data-index="${index}" class="cart-quantity" aria-label="Quantity for ${escapeHTML(item.product)}">
-                        </p>
-                        <p>Subtotal: $${subtotal.toFixed(2)}</p>
-                        <button class="btn remove-from-cart" data-index="${index}" aria-label="Remove ${escapeHTML(item.product)} from cart">Remove</button>
-                    </div>
-                </div>`;
-        });
-        if (appliedCoupons.length > 0) {
-            appliedCoupons.forEach(coupon => {
-                if (coupon.type === 'percentage') {
-                    cartDiv.innerHTML += `<p><strong>Discount Applied (${escapeHTML(coupon.code)}): ${coupon.value * 100}%</strong></p>`;
-                }
-                // Handle other coupon types
-            });
-        }
-        if (cart.length === 0) {
-            if (checkoutButton) checkoutButton.disabled = true;
-            if (emptyCartMessage) emptyCartMessage.classList.remove('hidden');
-        } else {
-            if (checkoutButton) checkoutButton.disabled = false;
-            if (emptyCartMessage) emptyCartMessage.classList.add('hidden');
-        }
-        if (totalPriceDiv) {
-            totalPriceDiv.innerHTML = `<strong>Total Price: $${totalPrice.toFixed(2)}</strong>`;
-        }
-        if (cartCount) {
-            cartCount.textContent = cart.length;
-        }
-        attachCartEventListeners();
-    }
-
-    function removeFromCart(index) {
-        cart.splice(index, 1);
-        saveCart();
-        displayCart();
-        showToast('Item removed from cart.', 'info');
-    }
-
-    function updateQuantity(index, newQuantity) {
-        newQuantity = parseInt(newQuantity, 10);
-        if (isNaN(newQuantity) || newQuantity < 1 || newQuantity > 10) {
-            showToast('Please select a valid quantity between 1 and 10.', 'error');
-            displayCart();
-            return;
-        }
-        cart[index].quantity = newQuantity;
-        saveCart();
-        displayCart();
-        showToast('Cart updated.', 'success');
-    }
-
-    function applyCoupon() {
-        const couponCode = document.getElementById('couponCode').value.trim().toUpperCase();
-        const coupon = COUPONS[couponCode];
-        const today = new Date();
-        if (coupon && new Date(coupon.expires) > today) {
-            if (appliedCoupons.find(c => c.code === couponCode)) {
-                showToast('Coupon already applied.', 'info');
-                return;
-            }
-            appliedCoupons.push({ ...coupon, code: couponCode });
-            saveCart();
-            displayCart();
-            showToast(`Coupon ${escapeHTML(couponCode)} applied!`, 'success');
-        } else {
-            showToast('Invalid or expired coupon code.', 'error');
-        }
-    }
-
-    function proceedToCheckout() {
-        if (cart.length === 0) {
-            showToast('Your cart is empty.', 'error');
-            return;
-        }
-        window.location.href = 'checkout.html';
     }
 
     function saveCart() {
-        try {
-            // Implement server-side storage for cart data
-            localStorage.setItem('cart', JSON.stringify(cart));
-            localStorage.setItem('appliedCoupons', JSON.stringify(appliedCoupons));
-        } catch (e) {
-            console.error('Could not save cart', e);
-            showToast('Failed to save cart. Please try again.', 'error');
-        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem('appliedCoupon', JSON.stringify(appliedCoupon));
     }
 
-    function loadCart() {
-        const savedCart = localStorage.getItem('cart');
-        const savedCoupons = localStorage.getItem('appliedCoupons');
-        if (savedCart) {
-            try {
-                cart = JSON.parse(savedCart);
-            } catch (e) {
-                console.error('Could not parse cart data', e);
-                cart = [];
-                saveCart();
-            }
+    function addToCart(productName, quantity) {
+        const index = cart.findIndex(item => item.productName === productName);
+        if (index > -1) {
+            cart[index].quantity += quantity;
+        } else {
+            cart.push({ productName, quantity });
         }
-        if (savedCoupons) {
-            try {
-                appliedCoupons = JSON.parse(savedCoupons);
-            } catch (e) {
-                console.error('Could not parse coupons data', e);
-                appliedCoupons = [];
-                saveCart();
-            }
-        }
-        displayCart();
-    }
-
-    function attachCartEventListeners() {
-        document.querySelectorAll('.remove-from-cart').forEach(button => {
-            button.addEventListener('click', () => {
-                const index = button.dataset.index;
-                removeFromCart(index);
-            });
-        });
-
-        document.querySelectorAll('.cart-quantity').forEach(input => {
-            input.addEventListener('change', (e) => {
-                const index = e.target.dataset.index;
-                const newQuantity = e.target.value;
-                updateQuantity(index, newQuantity);
-            });
-        });
-
-        const applyCouponButton = document.getElementById('applyCouponButton');
-        if (applyCouponButton) {
-            applyCouponButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                applyCoupon();
-            });
-        }
-
-        const checkoutButton = document.getElementById('checkoutButton');
-        if (checkoutButton) {
-            checkoutButton.addEventListener('click', proceedToCheckout);
-        }
+        saveCart();
     }
 
     function getCart() {
         return cart;
     }
 
-    function clearCart() {
-        cart = [];
-        appliedCoupons = [];
-        saveCart();
-        displayCart();
+    function getCartCount() {
+        return cart.reduce((total, item) => total + item.quantity, 0);
     }
 
-    window.addEventListener('storage', (event) => {
-        if (event.key === 'cart' || event.key === 'appliedCoupons') {
-            loadCart();
+    function clearCart() {
+        cart = [];
+        appliedCoupon = null;
+        saveCart();
+    }
+
+    function displayCart() {
+        const cartItemsDiv = document.getElementById('cartItems');
+        if (!cartItemsDiv) return;
+
+        if (cart.length === 0) {
+            cartItemsDiv.innerHTML = '<p>Your cart is empty.</p>';
+            document.getElementById('totalPrice').textContent = '';
+            document.getElementById('checkoutButton').disabled = true;
+            document.getElementById('emptyCartMessage').classList.remove('hidden');
+            return;
+        } else {
+            document.getElementById('emptyCartMessage').classList.add('hidden');
+            document.getElementById('checkoutButton').disabled = false;
         }
-    });
+
+        let cartHTML = '<table><tr><th>Product</th><th>Quantity</th><th>Price</th><th></th></tr>';
+        let totalPrice = 0;
+
+        cart.forEach(item => {
+            const product = PRODUCTS[item.productName];
+            const itemPrice = product.price * item.quantity;
+            totalPrice += itemPrice;
+            cartHTML += `
+                <tr>
+                    <td>${escapeHTML(item.productName)}</td>
+                    <td>
+                        <input type="number" value="${item.quantity}" min="1" max="10" data-product="${escapeHTML(item.productName)}" class="quantity-input">
+                    </td>
+                    <td>$${itemPrice.toFixed(2)}</td>
+                    <td>
+                        <button data-product="${escapeHTML(item.productName)}" class="remove-item">Remove</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        cartHTML += '</table>';
+        cartItemsDiv.innerHTML = cartHTML;
+
+        let discount = 0;
+        let discountDescription = '';
+        let shippingCost = 5.00;
+
+        if (appliedCoupon) {
+            const coupon = COUPONS[appliedCoupon.code];
+            if (coupon && new Date(coupon.expires) >= new Date()) {
+                if (coupon.type === 'percentage') {
+                    discount = totalPrice * coupon.value;
+                    discountDescription = `Discount (${coupon.value * 100}% off): -$${discount.toFixed(2)}`;
+                } else if (coupon.type === 'fixed') {
+                    discount = coupon.value;
+                    discountDescription = `Discount ($${coupon.value.toFixed(2)} off): -$${discount.toFixed(2)}`;
+                } else if (coupon.type === 'shipping') {
+                    shippingCost = 0;
+                    discountDescription = 'Free Shipping Applied';
+                }
+            } else {
+                appliedCoupon = null;
+                saveCart();
+            }
+        }
+
+        if (discount > totalPrice) discount = totalPrice;
+
+        let finalTotal = totalPrice - discount + shippingCost;
+
+        let totalPriceText = `Total Price: $${finalTotal.toFixed(2)}`;
+        totalPriceText += `<br>Subtotal: $${totalPrice.toFixed(2)}`;
+        if (discount > 0 || discountDescription) {
+            totalPriceText += `<br>${discountDescription}`;
+        }
+        totalPriceText += `<br>Shipping: $${shippingCost.toFixed(2)}`;
+        document.getElementById('totalPrice').innerHTML = totalPriceText;
+
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', updateQuantity);
+        });
+        document.querySelectorAll('.remove-item').forEach(button => {
+            button.addEventListener('click', removeItem);
+        });
+    }
+
+    function updateQuantity(event) {
+        const productName = event.target.getAttribute('data-product');
+        let newQuantity = parseInt(event.target.value);
+        if (isNaN(newQuantity) || newQuantity < 1 || newQuantity > 10) {
+            showToast('Quantity must be between 1 and 10.', 'error');
+            event.target.value = 1;
+            newQuantity = 1;
+        }
+        const item = cart.find(item => item.productName === productName);
+        if (item) {
+            item.quantity = newQuantity;
+            saveCart();
+            displayCart();
+        }
+    }
+
+    function removeItem(event) {
+        const productName = event.target.getAttribute('data-product');
+        cart = cart.filter(item => item.productName !== productName);
+        saveCart();
+        displayCart();
+        showToast(`${escapeHTML(productName)} has been removed from your cart.`, 'info');
+    }
+
+    function applyCoupon(event) {
+        event.preventDefault();
+        const couponCode = document.getElementById('couponCode').value.trim().toUpperCase();
+        if (COUPONS[couponCode]) {
+            const coupon = COUPONS[couponCode];
+            if (new Date(coupon.expires) >= new Date()) {
+                appliedCoupon = { code: couponCode };
+                saveCart();
+                displayCart();
+                showToast(`Coupon "${couponCode}" applied successfully!`, 'success');
+            } else {
+                showToast('This coupon has expired.', 'error');
+            }
+        } else {
+            showToast('Invalid coupon code.', 'error');
+        }
+    }
+
+    function proceedToCheckout() {
+        window.location.href = 'checkout.html';
+    }
 
     return {
-        addToCart,
-        displayCart,
-        removeFromCart,
-        updateQuantity,
-        applyCoupon,
-        proceedToCheckout,
         loadCart,
+        addToCart,
         getCart,
-        clearCart
+        getCartCount,
+        clearCart,
+        displayCart,
+        applyCoupon,
+        proceedToCheckout
     };
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
     CartModule.loadCart();
+    CartModule.displayCart();
+
+    const couponForm = document.getElementById('couponForm');
+    if (couponForm) {
+        couponForm.addEventListener('submit', CartModule.applyCoupon);
+    }
+
+    const checkoutButton = document.getElementById('checkoutButton');
+    if (checkoutButton) {
+        checkoutButton.addEventListener('click', CartModule.proceedToCheckout);
+    }
 });

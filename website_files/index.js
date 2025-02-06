@@ -1,18 +1,14 @@
 import { CartModule } from './cart.js';
-import { showToast } from './utils.js';
+import { showToast, escapeHTML } from './utils.js';
+import { PRODUCTS } from './productsData.js';
 
-// Initialize modules when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Load the cart
     CartModule.loadCart();
-
-    // Newsletter Form
+    updateCartCount();
     const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', handleNewsletterForm);
     }
-
-    // Initialize Featured Products
     initializeFeaturedProducts();
 });
 
@@ -31,38 +27,42 @@ function handleNewsletterForm(event) {
         document.getElementById('newsletterEmailError').textContent = '';
         emailInput.removeAttribute('aria-invalid');
     }
-
-    // Get CSRF token
-    const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
-    const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
-
-    // Send the email to the server (Assuming an API endpoint exists)
-    fetch('/subscribe-newsletter', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify({ email })
-    })
-    .then(response => {
-        if (response.ok) {
-            showToast('Thank you for subscribing to our newsletter!', 'success');
-            newsletterForm.reset();
-        } else {
-            return response.json().then(errorData => {
-                throw new Error(errorData.message || 'Failed to subscribe.');
-            });
-        }
-    })
-    .catch(error => {
-        console.error(error);
-        showToast('An error occurred. Please try again later.', 'error');
-    });
+    showToast('Thank you for subscribing to our newsletter!', 'success');
+    newsletterForm.reset();
 }
 
 function initializeFeaturedProducts() {
-    // Highlight featured products or add any dynamic behavior
-    // For example, you could fetch featured products from the server
-    console.log('Featured products initialized.');
+    const featuredProductsSection = document.getElementById('featured-products');
+    if (!featuredProductsSection) return;
+
+    const featuredProducts = ['Organic Bananas', 'Golden Bananas'];
+    let productsHTML = '<div class="product-list">';
+
+    featuredProducts.forEach(productName => {
+        const product = PRODUCTS[productName];
+        productsHTML += `
+            <article class="product">
+                <figure>
+                    <picture>
+                        <source srcset="${escapeHTML(product.image)}" type="image/webp">
+                        <img src="${escapeHTML(product.image.replace('.webp', '.jpg'))}" alt="${escapeHTML(productName)}" loading="lazy">
+                    </picture>
+                    <figcaption>${escapeHTML(product.description)}</figcaption>
+                </figure>
+                <h4>${escapeHTML(productName)}</h4>
+                <p>Price: $${product.price.toFixed(2)} each</p>
+                <a href="${escapeHTML(product.productPage)}" class="btn">View Product</a>
+            </article>
+        `;
+    });
+
+    productsHTML += '</div>';
+    featuredProductsSection.innerHTML = productsHTML;
+}
+
+function updateCartCount() {
+    const cartCount = document.getElementById('cart-count');
+    if (cartCount) {
+        cartCount.textContent = CartModule.getCartCount();
+    }
 }
