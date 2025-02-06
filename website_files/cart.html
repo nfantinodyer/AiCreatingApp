@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View your shopping cart and proceed to checkout.">
+    <meta name="keywords" content="Cart, Shopping Cart, Checkout">
+    <meta name="author" content="Banana Shop">
+    <meta property="og:title" content="Your Cart - Banana Shop">
+    <meta property="og:description" content="View your shopping cart and proceed to checkout.">
+    <meta property="og:image" content="images/cart.jpg">
+    <link rel="stylesheet" href="style.css">
+    <title>Your Cart</title>
+</head>
+<body>
+    <header>
+        <h1>Your Shopping Cart</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html" aria-label="Home">Home</a></li>
+                <li><a href="products.html" aria-label="Products">Products</a></li>
+                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
+                <li><a href="cart.html" aria-label="Cart" class="active">Cart</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Your Cart Items</h2>
+        <div id="cartItems" aria-live="polite"></div>
+        <p id="totalPrice"></p>
+        <button aria-label="Proceed to Checkout" onclick="proceedToCheckout()" id="checkoutButton">Proceed to Checkout</button>
+        <p id="emptyCartMessage" style="display:none;">Your cart is empty. Start shopping now!</p>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Shop</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>

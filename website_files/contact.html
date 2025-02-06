@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact Banana Shop for inquiries or support.">
+    <meta name="keywords" content="Contact, Banana Shop, Support, Customer Service">
+    <meta name="author" content="Banana Shop">
+    <meta property="og:title" content="Contact Us - Banana Shop">
+    <meta property="og:description" content="Get in touch with us for any inquiries or support. We're here to help!">
+    <meta property="og:image" content="images/contact.jpg">
     <link rel="stylesheet" href="style.css">
     <title>Contact Us</title>
 </head>
@@ -11,9 +17,10 @@
         <h1>Contact Us</h1>
         <nav>
             <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="index.html" aria-label="Home">Home</a></li>
+                <li><a href="products.html" aria-label="Products">Products</a></li>
+                <li><a href="contact.html" aria-label="Contact" class="active">Contact</a></li>
+                <li><a href="cart.html" aria-label="Cart">Cart</a></li>
             </ul>
         </nav>
     </header>
@@ -21,12 +28,12 @@
         <h2>Get in Touch</h2>
         <form id="contactForm">
             <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
+            <input type="text" id="name" name="name" required aria-label="Enter your name">
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
+            <input type="email" id="email" name="email" required aria-label="Enter your email">
             <label for="message">Message:</label>
-            <textarea id="message" name="message" required></textarea>
-            <button type="submit">Send Message</button>
+            <textarea id="message" name="message" required aria-label="Enter your message"></textarea>
+            <button type="submit" aria-label="Send Message">Send Message</button>
         </form>
     </main>
     <footer>

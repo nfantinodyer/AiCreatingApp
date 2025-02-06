@@ -21,6 +21,9 @@ nav ul li a {
     text-decoration: none;
     color: #000;
 }
+nav ul li a:hover, .active {
+    text-decoration: underline;
+}
 main {
     padding: 20px;
     text-align: center;
@@ -30,12 +33,21 @@ main {
     padding: 15px;
     margin: 10px;
     display: inline-block;
+    text-align: left;
+    max-width: 300px;
+}
+.product img {
+    max-width: 100%;
+    height: auto;
 }
 .btn {
     background-color: #ffeb3b;
     padding: 10px 20px;
     text-decoration: none;
     color: #000;
+}
+.btn:hover {
+    background-color: #fbc02d;
 }
 footer {
     text-align: center;
@@ -66,4 +78,14 @@ button {
 }
 button:hover {
     background-color: #fbc02d;
+}
+@media (max-width: 600px) {
+    .product {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    nav ul li {
+        display: block;
+        margin: 5px 0;
+    }
 }

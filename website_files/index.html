@@ -3,24 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Welcome to Banana Shop, your online store for fresh bananas.">
+    <meta name="keywords" content="Bananas, Organic Bananas, Fresh Bananas, Buy Bananas Online, Fruit Store">
+    <meta name="author" content="Banana Shop">
+    <meta property="og:title" content="Banana Shop">
+    <meta property="og:description" content="Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!">
+    <meta property="og:image" content="images/banana_shop.jpg">
+    <meta name="theme-color" content="#ffeb3b">
     <link rel="stylesheet" href="style.css">
     <title>Banana Shop</title>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Store",
+      "name": "Banana Shop",
+      "image": "https://example.com/images/banana_shop.jpg",
+      "description": "Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "123 Banana St",
+        "addressLocality": "Fruitville",
+        "postalCode": "12345",
+        "addressCountry": "US"
+      }
+    }
+    </script>
 </head>
 <body>
     <header>
         <h1>Welcome to the Banana Shop</h1>
         <nav>
             <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="index.html" aria-label="Home" class="active">Home</a></li>
+                <li><a href="products.html" aria-label="Products">Products</a></li>
+                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
+                <li><a href="cart.html" aria-label="Cart">Cart</a></li>
             </ul>
         </nav>
     </header>
     <main>
         <h2>Fresh Bananas for Sale!</h2>
         <p>Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!</p>
-        <a href="products.html" class="btn">View Products</a>
+        <a href="products.html" class="btn" aria-label="View Products">View Products</a>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>

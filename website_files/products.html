@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore our range of banana products available for sale.">
+    <meta name="keywords" content="Bananas, Banana Products, Buy Bananas, Organic Bananas, Golden Bananas">
+    <meta name="author" content="Banana Shop">
+    <meta property="og:title" content="Banana Products">
+    <meta property="og:description" content="Check out our organic and golden bananas, available at great prices.">
+    <meta property="og:image" content="images/banana_products.jpg">
     <link rel="stylesheet" href="style.css">
     <title>Banana Products</title>
 </head>
@@ -11,26 +17,36 @@
         <h1>Our Products</h1>
         <nav>
             <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="index.html" aria-label="Home">Home</a></li>
+                <li><a href="products.html" aria-label="Products" class="active">Products</a></li>
+                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
+                <li><a href="cart.html" aria-label="Cart">Cart</a></li>
             </ul>
         </nav>
     </header>
     <main>
         <h2>Available Bananas</h2>
-        <div class="product">
+        <section class="product">
+            <img src="images/organic_bananas.jpg" alt="Organic Bananas - Freshly picked organic bananas from local farms">
             <h3>Organic Bananas</h3>
             <p>Freshly picked organic bananas.</p>
             <p>Price: $1.00 each</p>
-            <button onclick="addToCart('Organic Bananas')">Add to Cart</button>
-        </div>
-        <div class="product">
+            <label for="quantityOrganic">Quantity:</label>
+            <input type="number" id="quantityOrganic" value="1" min="1" max="10">
+            <button aria-label="Add Organic Bananas to Cart" onclick="addToCart('Organic Bananas', parseInt(document.getElementById('quantityOrganic').value))">Add to Cart</button>
+        </section>
+        <section class="product">
+            <img src="images/golden_bananas.jpg" alt="Golden Bananas - Sweet golden bananas with a delightful flavor">
             <h3>Golden Bananas</h3>
             <p>Sweet golden bananas.</p>
             <p>Price: $0.80 each</p>
-            <button onclick="addToCart('Golden Bananas')">Add to Cart</button>
-        </div>
+            <label for="quantityGolden">Quantity:</label>
+            <input type="number" id="quantityGolden" value="1" min="1" max="10">
+            <button aria-label="Add Golden Bananas to Cart" onclick="addToCart('Golden Bananas', parseInt(document.getElementById('quantityGolden').value))">Add to Cart</button>
+        </section>
+        <h3>Your Cart</h3>
+        <div id="cart" aria-live="polite"></div>
+        <p id="totalPrice"></p>
     </main>
     <footer>
         <p>&copy; 2023 Banana Shop</p>
