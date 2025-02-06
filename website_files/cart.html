@@ -1,7 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart - Banana Shop</title>
     <meta name="description" content="Review the items in your Banana Shop cart, update quantities, apply coupons, and proceed to a secure checkout.">
     <meta name="keywords" content="Cart, Shopping Cart, Checkout">
     <meta name="author" content="Banana Shop">
@@ -11,7 +13,7 @@
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' https://your-cdn.com data:;
-        script-src 'self' https://js.stripe.com https://www.google.com/recaptcha/;
+        script-src 'self';
         style-src 'self';
         font-src 'self';
         connect-src 'self' https://api.yourdomain.com;
@@ -19,7 +21,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="canonical" href="https://yourdomain.com/cart.html">
     <meta name="robots" content="index, follow">
-    <title>Your Cart - Banana Shop</title>
     <script type="application/ld+json">
     {
       "@context": "http://schema.org",
@@ -39,6 +40,8 @@
                 <li><a href="products.html" aria-label="Products">Products</a></li>
                 <li><a href="contact.html" aria-label="Contact">Contact</a></li>
                 <li><a href="cart.html" aria-label="Cart" class="active">Cart</a></li>
+                <li><a href="login.html" aria-label="Login">Login</a></li>
+                <li><a href="register.html" aria-label="Register">Register</a></li>
                 <li><a href="account.html" aria-label="My Account">My Account</a></li>
             </ul>
         </nav>
@@ -61,21 +64,17 @@
             <!-- Cart items will be displayed here -->
         </div>
         <p id="totalPrice"></p>
-        
         <!-- Coupon Code Section -->
         <section id="coupon-section">
             <h3>Apply a Coupon Code</h3>
-            <form id="couponForm" method="post" action="/apply-coupon">
+            <form id="couponForm">
                 <label for="couponCode">Coupon Code:</label>
                 <input type="text" id="couponCode" name="couponCode" aria-label="Enter coupon code">
-                <!-- CSRF Token -->
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button class="btn" id="applyCouponButton" aria-label="Apply Coupon">Apply</button>
             </form>
         </section>
-        
         <button class="btn" aria-label="Proceed to Checkout" id="checkoutButton">Proceed to Checkout</button>
-        <p id="emptyCartMessage" style="display:none;">Your cart is empty. Start shopping now!</p>
+        <p id="emptyCartMessage" class="hidden">Your cart is empty. Start shopping now!</p>
         <div id="toast" aria-live="assertive"></div>
     </main>
     <footer>

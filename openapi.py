@@ -111,6 +111,24 @@ def generate_initial_code(prompt, model=DEFAULT_MODEL):
     )
     return response.choices[0].message.content
 
+def load_feedback(feedback_path="feedback.txt"):
+    """
+    If the specified feedback file exists, return its content;
+    otherwise, return an empty string.
+    """
+    if os.path.exists(feedback_path):
+        with open(feedback_path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    return ""
+
+def clear_feedback(feedback_path="feedback.txt"):
+    """
+    Clear all text from the feedback file.
+    """
+    if os.path.exists(feedback_path):
+        with open(feedback_path, "w", encoding="utf-8") as f:
+            f.write("")
+
 def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     full_prompt = (
         reviewer_prompt + "\n\n"
@@ -146,7 +164,7 @@ def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
 def gap_analysis(code_text, model=DEFAULT_MODEL):
     analysis_prompt = (
         "Please review the following code for a website for selling bananas. "
-        "Identify any missing features or improvements, and provide suggestions on what to add or fix.\n\n"
+        "Identify any missing features or improvements, and provide suggestions on what to add or fix. Do not include any security additions in your response.\n\n"
         + code_text
     )
     response = openai.chat.completions.create(
@@ -173,23 +191,30 @@ previous_aggregated_code = ""
 while iteration < max_iterations:
     safe_print(f"\n===== Iteration {iteration+1} =====\n")
     
-    # --- Pre-run Gap Analysis & Prompt Update ---
-    if os.listdir(WEBSITE_DIR):
-        safe_print("Scanning current website files for pre-run gap analysis...")
-        current_files_str = assemble_files(WEBSITE_DIR)
-        pre_analysis = gap_analysis(current_files_str)
-        safe_print("Pre-run Gap Analysis suggestions:")
-        safe_print(pre_analysis)
-        updated_prompt = (
-            base_prompt +
-            "\n\nCurrent website files:\n" + current_files_str +
-            "\n\nIncorporate all of the following improvements:\n" + pre_analysis
-        )
-    else:
-        updated_prompt = base_prompt
+    if iteration == 0:
+        # --- Pre-run Gap Analysis & Prompt Update ---
+        if os.listdir(WEBSITE_DIR):
+            safe_print("Scanning current website files for pre-run gap analysis...")
+            current_files_str = assemble_files(WEBSITE_DIR)
+            pre_analysis = gap_analysis(current_files_str)
+            safe_print("Pre-run Gap Analysis suggestions:")
+            safe_print(pre_analysis)
+            updated_prompt = (
+                base_prompt +
+                "\n\nCurrent website files:\n" + current_files_str +
+                "\n\nIncorporate all of the following improvements:\n" + pre_analysis
+            )
+        else:
+            updated_prompt = base_prompt
 
-    safe_print("Updated prompt for code generation:")
+    print("Updated prompt for code generation:")
     safe_print(updated_prompt)
+
+    additional_feedback = load_feedback()
+    if additional_feedback:
+        print("Additional feedback loaded")
+        updated_prompt += "\n\nAdditional Very Important Feedback to fix first:\n" + additional_feedback
+    clear_feedback()
 
     # --- Step 1: Initial Code Generation ---
     print("Initial Code Generation Begins")

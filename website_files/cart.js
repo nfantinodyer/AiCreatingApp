@@ -2,10 +2,10 @@ import { PRODUCTS } from './js/productsData.js';
 import { COUPONS } from './js/couponsData.js';
 import { showToast, escapeHTML } from './js/utils.js';
 
-let cart = [];
-let appliedCoupons = [];
+export const CartModule = (function() {
+    let cart = [];
+    let appliedCoupons = [];
 
-const CartModule = (function() {
     function addToCart(product, quantity) {
         if (quantity < 1 || quantity > 10) {
             showToast('Please select a valid quantity between 1 and 10.', 'error');
@@ -23,7 +23,7 @@ const CartModule = (function() {
         }
         saveCart();
         displayCart();
-        showToast(`${product} has been added to your cart!`, 'success');
+        showToast(`${escapeHTML(product)} has been added to your cart!`, 'success');
     }
 
     function displayCart() {
@@ -72,15 +72,17 @@ const CartModule = (function() {
         }
         if (cart.length === 0) {
             if (checkoutButton) checkoutButton.disabled = true;
-            if (emptyCartMessage) emptyCartMessage.style.display = 'block';
+            if (emptyCartMessage) emptyCartMessage.classList.remove('hidden');
         } else {
             if (checkoutButton) checkoutButton.disabled = false;
-            if (emptyCartMessage) emptyCartMessage.style.display = 'none';
+            if (emptyCartMessage) emptyCartMessage.classList.add('hidden');
         }
         if (totalPriceDiv) {
             totalPriceDiv.innerHTML = `<strong>Total Price: $${totalPrice.toFixed(2)}</strong>`;
         }
-        cartCount.textContent = cart.length;
+        if (cartCount) {
+            cartCount.textContent = cart.length;
+        }
         attachCartEventListeners();
     }
 
@@ -92,7 +94,7 @@ const CartModule = (function() {
     }
 
     function updateQuantity(index, newQuantity) {
-        newQuantity = parseInt(newQuantity);
+        newQuantity = parseInt(newQuantity, 10);
         if (isNaN(newQuantity) || newQuantity < 1 || newQuantity > 10) {
             showToast('Please select a valid quantity between 1 and 10.', 'error');
             displayCart();
@@ -113,10 +115,10 @@ const CartModule = (function() {
                 showToast('Coupon already applied.', 'info');
                 return;
             }
-            appliedCoupons.push(coupon);
+            appliedCoupons.push({ ...coupon, code: couponCode });
             saveCart();
             displayCart();
-            showToast(`Coupon ${couponCode} applied!`, 'success');
+            showToast(`Coupon ${escapeHTML(couponCode)} applied!`, 'success');
         } else {
             showToast('Invalid or expired coupon code.', 'error');
         }
@@ -132,6 +134,7 @@ const CartModule = (function() {
 
     function saveCart() {
         try {
+            // Implement server-side storage for cart data
             localStorage.setItem('cart', JSON.stringify(cart));
             localStorage.setItem('appliedCoupons', JSON.stringify(appliedCoupons));
         } catch (e) {
@@ -182,7 +185,10 @@ const CartModule = (function() {
 
         const applyCouponButton = document.getElementById('applyCouponButton');
         if (applyCouponButton) {
-            applyCouponButton.addEventListener('click', applyCoupon);
+            applyCouponButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                applyCoupon();
+            });
         }
 
         const checkoutButton = document.getElementById('checkoutButton');

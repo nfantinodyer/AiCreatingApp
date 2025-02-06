@@ -1,120 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Updated meta tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Explore our range of banana products available for sale.">
     <meta name="keywords" content="Bananas, Banana Products, Buy Bananas, Organic Bananas, Golden Bananas">
     <meta name="author" content="Banana Shop">
-    <meta property="og:title" content="Banana Products">
+    <meta property="og:title" content="Banana Products - Banana Shop">
     <meta property="og:description" content="Check out our organic and golden bananas, available at great prices.">
-    <meta property="og:image" content="images/banana_products.jpg">
+    <!-- Use modern image format with absolute URL -->
+    <meta property="og:image" content="https://yourdomain.com/images/banana_products.webp">
+    <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' https://your-cdn.com data:;
-        script-src 'self' https://js.stripe.com https://www.google.com/recaptcha/;
+        script-src 'self';
         style-src 'self' 'unsafe-inline';
         font-src 'self';
         connect-src 'self' https://api.yourdomain.com;
+        frame-ancestors 'none';
     ">
     <link rel="stylesheet" href="style.css">
     <link rel="canonical" href="https://yourdomain.com/products.html">
     <meta name="robots" content="index, follow">
     <title>Banana Products - Banana Shop</title>
+    <!-- Structured Data -->
     <script type="application/ld+json">
     {
-      "@context": "http://schema.org",
+      "@context": "https://schema.org",
       "@type": "ItemList",
       "itemListElement": [
         {
-          "@type": "Product",
-          "name": "Organic Bananas",
-          "image": "https://yourdomain.com/images/organic_bananas.jpg",
-          "description": "Freshly picked organic bananas from local farms.",
-          "sku": "ORG-BN-001",
-          "offers": {
-            "@type": "Offer",
-            "priceCurrency": "USD",
-            "price": "1.00",
-            "availability": "http://schema.org/InStock",
-            "url": "https://yourdomain.com/products.html#Organic-Bananas"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.5",
-            "reviewCount": "24"
-          },
-          "review": [
-            {
-              "@type": "Review",
-              "author": "Jane Doe",
-              "datePublished": "2023-09-15",
-              "reviewBody": "Excellent quality and fresh bananas!",
-              "reviewRating": {
-                "@type": "Rating",
-                "bestRating": "5",
-                "ratingValue": "5",
-                "worstRating": "1"
-              }
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "Product",
+            "name": "Organic Bananas",
+            "image": "https://yourdomain.com/images/organic_bananas.webp",
+            "description": "Freshly picked organic bananas from local farms.",
+            "sku": "ORG-BN-001",
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "USD",
+              "price": "1.00",
+              "availability": "http://schema.org/InStock",
+              "url": "https://yourdomain.com/product-organic-bananas.html"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.5",
+              "reviewCount": "24"
             }
-          ]
+          }
         },
         {
-          "@type": "Product",
-          "name": "Golden Bananas",
-          "image": "https://yourdomain.com/images/golden_bananas.jpg",
-          "description": "Sweet golden bananas.",
-          "sku": "GOLD-BN-002",
-          "offers": {
-            "@type": "Offer",
-            "priceCurrency": "USD",
-            "price": "0.80",
-            "availability": "http://schema.org/InStock",
-            "url": "https://yourdomain.com/products.html#Golden-Bananas"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.2",
-            "reviewCount": "18"
-          },
-          "review": [
-            {
-              "@type": "Review",
-              "author": "John Smith",
-              "datePublished": "2023-09-10",
-              "reviewBody": "Great taste and perfect ripeness!",
-              "reviewRating": {
-                "@type": "Rating",
-                "bestRating": "5",
-                "ratingValue": "4",
-                "worstRating": "1"
-              }
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "Product",
+            "name": "Golden Bananas",
+            "image": "https://yourdomain.com/images/golden_bananas.webp",
+            "description": "Sweet golden bananas.",
+            "sku": "GOLD-BN-002",
+            "offers": {
+              "@type": "Offer",
+              "priceCurrency": "USD",
+              "price": "0.80",
+              "availability": "http://schema.org/InStock",
+              "url": "https://yourdomain.com/product-golden-bananas.html"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.2",
+              "reviewCount": "18"
             }
-          ]
+          }
         }
       ]
     }
     </script>
 </head>
 <body>
+    <!-- Skip link -->
     <a href="#mainContent" class="skip-link">Skip to main content</a>
+    <!-- Header -->
     <header>
         <h1>Our Products</h1>
+        <!-- Navigation Menu -->
         <nav role="navigation" aria-label="Primary Navigation">
             <ul>
-                <li><a href="index.html" aria-label="Home">Home</a></li>
-                <li><a href="products.html" aria-label="Products" class="active">Products</a></li>
-                <li><a href="contact.html" aria-label="Contact">Contact</a></li>
-                <li><a href="cart.html" aria-label="Cart">Cart</a></li>
-                <li><a href="account.html" aria-label="My Account">My Account</a></li>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html" class="active">Products</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="cart.html">Cart</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+                <li><a href="account.html">My Account</a></li>
             </ul>
         </nav>
+        <!-- Breadcrumb Navigation -->
         <nav aria-label="Breadcrumb">
             <ol class="breadcrumb">
                 <li><a href="index.html">Home</a></li>
                 <li aria-current="page">Products</li>
             </ol>
         </nav>
+        <!-- Cart Icon -->
         <div class="cart-icon">
             <a href="cart.html" aria-label="Cart">
                 <img src="images/cart-icon.svg" alt="Cart">
@@ -122,21 +114,25 @@
             </a>
         </div>
     </header>
+    <!-- Main Content -->
     <main id="mainContent">
         <h2>Available Bananas</h2>
         
         <!-- Search and Filter Section -->
         <section id="search-filter">
+            <label for="searchInput">Search Products</label>
             <input type="text" id="searchInput" placeholder="Search products..." aria-label="Search products">
+            <label for="filterSelect">Filter Products</label>
             <select id="filterSelect" aria-label="Filter products">
                 <option value="all">All</option>
                 <option value="organic">Organic Bananas</option>
                 <option value="golden">Golden Bananas</option>
+                <!-- Add more categories as needed -->
             </select>
         </section>
         
         <!-- Product Listings -->
-        <section id="product-list">
+        <section id="product-list" aria-live="polite">
             <!-- Products will be loaded dynamically here -->
             <div id="loadingSpinner" class="spinner" style="display: none;"></div>
         </section>
@@ -153,10 +149,12 @@
         <p id="totalPrice"></p>
         <div id="toast" aria-live="assertive"></div>
     </main>
+    <!-- Footer -->
     <footer>
         <p>&copy; 2023 Banana Shop</p>
-        <p><a href="privacy.html" aria-label="Privacy Policy">Privacy Policy</a> | <a href="terms.html" aria-label="Terms of Service">Terms of Service</a></p>
+        <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a></p>
     </footer>
-    <script type="module" src="products.js"></script>
+    <!-- Include script files -->
+    <script type="module" src="products.min.js"></script>
 </body>
 </html>

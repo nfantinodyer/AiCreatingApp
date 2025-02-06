@@ -1,0 +1,2 @@
+1) The product page is not displaying any products.
+2) There is no current login or account page.

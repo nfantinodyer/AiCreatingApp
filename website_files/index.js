@@ -1,7 +1,9 @@
 import { CartModule } from './cart.js';
 import { showToast } from './utils.js';
 
+// Initialize modules when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Load the cart
     CartModule.loadCart();
 
     // Newsletter Form
@@ -10,11 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
         newsletterForm.addEventListener('submit', handleNewsletterForm);
     }
 
-    // Initialize Product Features if on Index Page
-    if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
-        // Example: Highlight featured products or similar
-        initializeFeaturedProducts();
-    }
+    // Initialize Featured Products
+    initializeFeaturedProducts();
 });
 
 function handleNewsletterForm(event) {
@@ -33,12 +32,37 @@ function handleNewsletterForm(event) {
         emailInput.removeAttribute('aria-invalid');
     }
 
-    // Here you would typically send the email to the server
-    showToast('Thank you for subscribing to our newsletter!', 'success');
-    newsletterForm.reset();
+    // Get CSRF token
+    const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
+    const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+    // Send the email to the server (Assuming an API endpoint exists)
+    fetch('/subscribe-newsletter', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ email })
+    })
+    .then(response => {
+        if (response.ok) {
+            showToast('Thank you for subscribing to our newsletter!', 'success');
+            newsletterForm.reset();
+        } else {
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || 'Failed to subscribe.');
+            });
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        showToast('An error occurred. Please try again later.', 'error');
+    });
 }
 
 function initializeFeaturedProducts() {
-    // Example: You can add scripts to highlight featured products, animate them or similar
+    // Highlight featured products or add any dynamic behavior
+    // For example, you could fetch featured products from the server
     console.log('Featured products initialized.');
 }

@@ -1,4 +1,4 @@
-import { CartModule } from './products.js';
+import { CartModule } from './cart.js';
 import { PRODUCTS } from './productsData.js';
 import { COUPONS } from './couponsData.js';
 import { showToast, escapeHTML } from './utils.js';
@@ -8,7 +8,7 @@ const elements = stripe.elements();
 const card = elements.create('card');
 card.mount('#card-element');
 
-card.addEventListener('change', function(event) {
+card.on('change', function(event) {
     const displayError = document.getElementById('card-errors');
     if (event.error) {
         displayError.textContent = escapeHTML(event.error.message);
@@ -47,9 +47,9 @@ function displayOrderSummary() {
         totalPrice += subtotal;
         summaryHTML += `<li>${escapeHTML(item.product)} - $${price.toFixed(2)} x ${item.quantity} = $${subtotal.toFixed(2)}</li>`;
     });
-    const discount = getTotalDiscount();
-    if (discount > 0) {
-        summaryHTML += `<li><strong>Discount: ${(discount * 100).toFixed(0)}%</strong></li>`;
+    const discountPercentage = getTotalDiscount();
+    if (discountPercentage > 0) {
+        summaryHTML += `<li><strong>Total Discount: ${(discountPercentage * 100).toFixed(0)}%</strong></li>`;
     }
     summaryHTML += `</ul><p><strong>Total: $${totalPrice.toFixed(2)}</strong></p>`;
     orderSummaryDiv.innerHTML = summaryHTML;
@@ -67,20 +67,24 @@ function getAppliedCoupons() {
 
 function getTotalDiscount() {
     const coupons = getAppliedCoupons();
-    let discount = 0;
+    let discountMultiplier = 1;
     coupons.forEach(coupon => {
         if (coupon.type === 'percentage') {
-            discount += coupon.value;
+            discountMultiplier *= (1 - coupon.value);
         }
         // Handle other coupon types
     });
-    return discount > 1 ? 1 : discount;
+    return 1 - discountMultiplier;
 }
 
 async function fetchClientSecret() {
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
     const response = await fetch('/create-payment-intent', { // Ensure server supports this endpoint
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+        },
         body: JSON.stringify({ cart: CartModule.getCart(), coupons: getAppliedCoupons() })
     });
     if (!response.ok) {
@@ -121,12 +125,11 @@ async function handleFormSubmit(event) {
             displayError.textContent = escapeHTML(error.message);
             submitButton.disabled = false;
         } else if (paymentIntent.status === 'succeeded') {
-            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('successMessage').classList.remove('hidden');
             checkoutForm.style.display = 'none';
             showToast('Your order has been placed successfully!', 'success');
             CartModule.clearCart();
             submitButton.disabled = false;
-            // Dynamically update schema.org Order
             updateOrderSchema(paymentIntent);
             // Optionally redirect to order confirmation page
             // window.location.href = 'order-confirmation.html';
@@ -168,7 +171,7 @@ function updateOrderSchema(paymentIntent) {
     document.head.appendChild(orderSchemaScript);
 }
 
-export function initializeCheckout() {
+function initializeCheckout() {
     displayOrderSummary();
 }
 
