@@ -189,7 +189,7 @@ base_prompt = (
     "- Basic file encryption for security."
     "- Proper error handling and logging."
     "Do not include any commentary. Please provide the code implementation only."
-    "Keep all files in the same directory"
+    "Keep all files in the base directory"
 )
 
 max_iterations = 5
@@ -264,7 +264,7 @@ while iteration < max_iterations:
         "- Basic file encryption for security."
         "- Proper error handling and logging."
         "Do not include any commentary. Please provide the code implementation only."
-        "Keep all files in the same directory"
+        "Keep all files in the base directory"
         "\n\nIncorporate all of the following improvements:\n" + post_analysis
     )
     safe_print("Base prompt updated for next iteration:")
