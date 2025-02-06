@@ -164,7 +164,7 @@ def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
 
 def gap_analysis(code_text, model=DEFAULT_MODEL):
     analysis_prompt = (
-        "Please review the following code for a website for selling bananas. "
+        "Please review the following code for a web-based file sharing application. "
         "Identify any missing features or improvements, and provide suggestions on what to add or fix. Do not include any security additions in your response. Before adding more functions, be sure to fix the current issues. It's important to have a working foundation before adding more features, so please limit your additions, escpecially if they are not important.\n\n"
         + code_text
     )
@@ -181,8 +181,15 @@ WEBSITE_DIR = "website_files"
 os.makedirs(WEBSITE_DIR, exist_ok=True)
 
 base_prompt = (
-    "Create a website in HTML, CSS, and JavaScript for selling bananas. "
-    "Include a homepage, product listing, and a contact form."
+    "I'm building a web-based file sharing application and need a detailed implementation using Python with the Flask framework. The application should include the following features:"
+    "- User registration and authentication."
+    "- Secure file upload and download functionality."
+    "- Generation of shareable links for files."
+    "- Storage of file metadata in a SQLite database."
+    "- Basic file encryption for security."
+    "- Proper error handling and logging."
+    "Do not include any commentary. Please provide the code implementation only."
+    "Keep all files in the same directory"
 )
 
 max_iterations = 5
@@ -202,7 +209,7 @@ while iteration < max_iterations:
             safe_print(pre_analysis)
             updated_prompt = (
                 base_prompt +
-                "\n\nCurrent website files:\n" + current_files_str +
+                "\n\nCurrent files:\n" + current_files_str +
                 "\n\nIncorporate all of the following improvements:\n" + pre_analysis
             )
         else:
@@ -249,8 +256,15 @@ while iteration < max_iterations:
 
     # --- Update Base Prompt with Latest Analysis ---
     base_prompt = (
-        "Create a website in HTML, CSS, and JavaScript for selling bananas. "
-        "Include a homepage, product listing, and a contact form."
+        "I'm building a web-based file sharing application and need a detailed implementation using Python with the Flask framework. The application should include the following features:"
+        "- User registration and authentication."
+        "- Secure file upload and download functionality."
+        "- Generation of shareable links for files."
+        "- Storage of file metadata in a SQLite database."
+        "- Basic file encryption for security."
+        "- Proper error handling and logging."
+        "Do not include any commentary. Please provide the code implementation only."
+        "Keep all files in the same directory"
         "\n\nIncorporate all of the following improvements:\n" + post_analysis
     )
     safe_print("Base prompt updated for next iteration:")

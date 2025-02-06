@@ -1,3 +1,0 @@
-1) Styling is messed up, so I can't read the text. Be sure to make sure styling is consistent, and style.css is updated.
-2) The cart is not working. It adds items, but when I click on the cart, it doesn't show the items. Be sure to fix this.
-3) Before adding more functions, be sure to fix the current issues. It's important to have a working foundation before adding more features.
