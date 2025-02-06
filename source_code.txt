@@ -1,0 +1,24 @@
+Both reviewers provided valuable feedback on the JavaScript code. Reviewer 1 suggested wrapping the JavaScript code in an Immediately Invoked Function Expression (IIFE) to avoid polluting the global namespace, which is a good practice to follow. However, this change might not be necessary if the codebase is small and there's no risk of function name conflicts.
+
+Reviewer 2 pointed out a potential error in the script when the `contact.html` page is not loaded, which is a more immediate issue that needs to be addressed. Therefore, the final version of the code will incorporate the changes suggested by Reviewer 2.
+
+Final Code:
+-----------------
+The HTML, CSS, and directory structure remain the same as the original code. The JavaScript code (`script.js`) is updated as follows:
+
+```javascript
+function addToCart(productName) {
+    alert(productName + " has been added to your cart!");
+}
+
+var contactForm = document.getElementById('contactForm');
+if (contactForm) {
+    contactForm.addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form submission for demo purposes
+        alert('Thank you for your message!');
+        this.reset(); // Reset the form after submission
+    });
+}
+```
+
+This change ensures that the event listener is only added if the contact form exists on the page, preventing errors when the script is loaded on the `index.html` or `products.html` pages.

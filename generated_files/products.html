@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Products - Banana Store</title>
+</head>
+<body>
+    <header>
+        <h1>Our Products</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Products</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Available Bananas</h2>
+        <ul class="product-list">
+            <li>
+                <h3>Organic Bananas</h3>
+                <p>Price: $1.00 each</p>
+                <button onclick="addToCart('Organic Bananas')">Add to Cart</button>
+            </li>
+            <li>
+                <h3>Fair-Trade Bananas</h3>
+                <p>Price: $1.50 each</p>
+                <button onclick="addToCart('Fair-Trade Bananas')">Add to Cart</button>
+            </li>
+            <li>
+                <h3>Banana Bunch</h3>
+                <p>Price: $5.00 per bunch</p>
+                <button onclick="addToCart('Banana Bunch')">Add to Cart</button>
+            </li>
+        </ul>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Store</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+Sure! Below is a simple example of a website for selling bananas using HTML, CSS, and JavaScript. The website will consist of a homepage, a product listing page, and a contact form. For simplicity, the styling is kept basic, and the JavaScript is used to handle form submission.
+
+### Folder Structure
+Assuming you create a folder called `banana-store` with the following structure:
+
+```
+banana-store/
+│
+├── index.html
+├── products.html
+├── contact.html
+└── style.css
+└── script.js
+```
+
+### index.html (Homepage)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Banana Store!</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Fresh Bananas for Sale!</h2>
+            <p>Discover the best quality bananas at unbeatable prices. Our bananas are sourced from the finest farms.</p>
+            <a href="products.html" class="button">Shop Now</a>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Store. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+### products.html (Product Listing)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Banana Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Banana Store Products</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Our Bananas</h2>
+            <ul>
+                <li>
+                    <h3>Fresh Bananas</h3>
+                    <p>Price: $1.00 each</p>
+                    <button>Add to Cart</button>
+                </li>
+                <li>
+                    <h3>Organic Bananas</h3>
+                    <p>Price: $1.50 each</p>
+                    <button>Add to Cart</button>
+                </li>
+                <li>
+                    <h3>Banana Bunch</h3>
+                    <p>Price: $5.00 per bunch</p>
+                    <button>Add to Cart</button>
+                </li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Store. All rights reserved.</p>
+    </footer>
+</body>
+</html>
+```
+
+### contact.html (Contact Form)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Banana Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Contact Banana Store</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="products.html">Products</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Get in Touch</h2>
+            <form id="contactForm">
+                <label for="name">Name:</label>
+                <input type="text" id="name" required>
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" required>
+                
+                <label for="message">Message:</label>
+                <textarea id="message" required></textarea>
+                
+                <button type="submit">Send</button>
+            </form>
+            <p id="formResponse"></p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Banana Store. All rights reserved.</p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
+```
+
+### style.css (Stylesheet)
+```css
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background: #ffcc00;
+    padding: 20px;
+    text-align: center;
+}
+
+nav a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: black;
+}
+
+button {
+    background-color: #ff9900;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e68a00;
+}
+
+main {
+    padding: 20px;
+}
+
+h2 {
+    color: #333;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background: #f1f1f1;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-top: 10px;
+}
+
+input, textarea {
+    margin-top: 5px;
+    padding: 10px;
+}
+```
+
+### script.js (JavaScript)
+```javascript
+document.getElementById('contactForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
+    
+    // Get form data
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const message = document.getElementById('message').value;
+
+    // Display a response message
+    const response = document.getElementById('formResponse');
+    response.textContent = `Thank you, ${name}! Your message has been received.`;
+    
+    // Clear the form
+    this.reset();
+});
+```
+
+### How to Run the Website
+1. Create a folder named `banana-store`.
+2. Inside that folder, create the four files: `index.html`, `products.html`, `contact.html`, `style.css`, and `script.js`.
+3. Copy the respective code blocks provided above into each file.
+4. Open `index.html` in a web browser to view the homepage. You can navigate to the other pages from there.
+
+This setup provides a simple yet functional website for selling bananas, including a homepage, product listings, and a contact form. You can expand upon it by adding more features like a shopping cart and backend functionalities.
