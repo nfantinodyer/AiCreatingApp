@@ -26,7 +26,7 @@ def remove_triple_backtick_lines(directory):
     for root, dirs, files in os.walk(directory):
         for filename in files:
             # Check if the file has one of the desired extensions
-            if filename.endswith(('.html', '.js', '.css')):
+            if filename.endswith(('.html', '.js', '.css', '.py', '.txt', '.log')):
                 file_path = os.path.join(root, filename)
                 
                 # Read all lines from the file
@@ -92,7 +92,7 @@ def write_files(file_dict, output_directory):
 
 # --- Model Call Functions (using o1-mini or o1-preview) ---
 # Set the default model to use. Change this to "o1-preview" if desired.
-DEFAULT_MODEL = "o1-preview"
+DEFAULT_MODEL = "o1-mini"
 
 def generate_initial_code(prompt, model=DEFAULT_MODEL):
     full_prompt = (
@@ -142,7 +142,7 @@ def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     )
     return response.choices[0].message.content
 
-def aggregate_reviews(original_code, review1, review2, model="o1-preview"):
+def aggregate_reviews(original_code, review1, review2, model="o1-mini"):
     aggregator_prompt = (
         "I have an original piece of code and two revised versions provided by independent reviewers. "
         "Each is in the following format:\n"
@@ -190,6 +190,7 @@ base_prompt = (
     "- Proper error handling and logging."
     "Do not include any commentary. Please provide the code implementation only."
     "Keep all files in the base directory"
+    "Adding something in a file means you must provide the full code for that file."
 )
 
 max_iterations = 5
@@ -265,6 +266,7 @@ while iteration < max_iterations:
         "- Proper error handling and logging."
         "Do not include any commentary. Please provide the code implementation only."
         "Keep all files in the base directory"
+        "Adding something in a file means you must provide the full code for that file."
         "\n\nIncorporate all of the following improvements:\n" + post_analysis
     )
     safe_print("Base prompt updated for next iteration:")

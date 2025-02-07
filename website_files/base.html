@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}File Sharing App{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('upload') }}" class="{% if request.endpoint == 'upload' %}active{% endif %}">Upload File</a> |
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Your Files</a> |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}active{% endif %}">Login</a> |
+            <a href="{{ url_for('register') }}" class="{% if request.endpoint == 'register' %}active{% endif %}">Register</a>
+        {% endif %}
+    </nav>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul id="flash-messages">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</body>
+</html>

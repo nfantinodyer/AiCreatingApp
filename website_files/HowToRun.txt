@@ -1,0 +1,87 @@
+# How to Run the File Sharing Application
+
+## Prerequisites
+
+- Python 3.7 or higher installed on your system.
+
+## Setup Instructions
+
+1. **Clone the Repository**
+
+   git clone <repository_url>
+   cd <repository_directory>
+
+2. **Create a Virtual Environment**
+
+   It is recommended to use a virtual environment to manage dependencies.
+
+   python3 -m venv venv
+
+3. **Activate the Virtual Environment**
+
+   - On macOS and Linux:
+
+     source venv/bin/activate
+
+   - On Windows:
+
+     venv\Scripts\activate
+
+4. **Install Required Dependencies**
+
+   pip install -r requirements.txt
+
+5. **Set Environment Variables**
+
+   - For development purposes, you can set the `SECRET_KEY` environment variable. If not set, a random key will be generated each time the app runs.
+
+   export SECRET_KEY='your_secret_key'
+
+   - To enable debug mode, set the `DEBUG` environment variable to `True`:
+
+   export DEBUG=True
+
+   On Windows Command Prompt:
+
+   set SECRET_KEY=your_secret_key
+   set DEBUG=True
+
+5. **Initialize the Database**
+
+   The database and necessary tables will be automatically created when you run the application for the first time.
+
+6. **Run the Application**
+
+   python app.py
+
+   The application will be accessible at `http://127.0.0.1:5000/` by default.
+
+## Usage
+
+1. **Register a New User**
+
+   Visit the registration page and create a new account.
+
+2. **Login**
+
+   Use your credentials to log in.
+
+3. **Upload Files**
+
+   Navigate to the upload page to upload your files. Allowed file types are: `txt`, `pdf`, `png`, `jpg`, `jpeg`, `gif`.
+
+4. **Manage Files**
+
+   - **Download:** Download your uploaded files.
+   - **Share:** Generate shareable links to allow others to download your files without logging in.
+   - **Delete:** Remove your files from the server.
+
+## Notes
+
+- Uploaded files are encrypted on the server for security.
+- Shareable links are unique and can be shared with others to allow file downloads.
+- Logs are maintained in the `app.log` file with rotation to manage log size.
+
+## License
+
+This project is licensed under the MIT License.
