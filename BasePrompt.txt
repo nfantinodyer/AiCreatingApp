@@ -1,11 +1,31 @@
-"I'm building a web-based file sharing application and need a detailed implementation using Python with the Flask framework. "
-"The application should include the following features:\n"
-"- User registration and authentication.\n"
-"- Secure file upload and download functionality.\n"
-"- Generation of shareable links for files.\n"
-"- Storage of file metadata in a SQLite database.\n"
-"- Basic file encryption for security.\n"
-"- Proper error handling and logging.\n"
-"Do not include any commentary. Please provide the code implementation only.\n"
-"Keep all files in the base directory.\n"
-"Adding something in a file means you must provide the full code for that file."
+Project: To-Do List Web Application
+
+Overview:
+Develop a web-based to-do list application. The application should allow users to add, view, update, and delete tasks. All tasks must be stored in a local database, and the design should be simple and user-friendly with a main page displaying the list of tasks and a form for adding new tasks. Do not implement any security features such as user authentication or encryption.
+
+Key Features & Requirements:
+- Display a list of all tasks on the main page.
+- Provide a form to add new tasks.
+- Allow users to update existing tasks.
+- Allow users to delete tasks.
+- Store tasks in a local database.
+- Use a simple and clean user interface.
+- All modifications must provide complete, production-ready files.
+- When modifying or adding a file, include the full file content—not just partial updates.
+- Organize files into appropriate directories and create subdirectories as needed.
+- Do not include any security features (authentication, encryption, etc.).
+- Do not include any additional commentary or explanations—output code only.
+
+Output Format:
+Please return your output in the following format for each file:
+### filename: <relative_path/filename> ###
+<complete file content>
+### end ###
+
+Additional Instructions:
+- Create any new directories required by the file paths.
+- Build a working foundation first before adding extra features.
+- Always include the complete file content when making modifications.
+- Follow the above specifications exactly and do not deviate from the format.
+
+Please generate the complete code implementation for this project according to these specifications.
