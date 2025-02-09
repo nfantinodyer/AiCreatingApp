@@ -10,7 +10,7 @@ def remove_triple_backtick_lines(directory):
     for root, dirs, files in os.walk(directory):
         for filename in files:
             # Check if the file has one of the desired extensions
-            if filename.endswith(('.html', '.js', '.css')):
+            if filename.endswith(('.html', '.js', '.css', '.py', '.txt', '.log')):
                 file_path = os.path.join(root, filename)
                 
                 # Read all lines from the file

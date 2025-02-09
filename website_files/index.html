@@ -1,208 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <!-- Meta tags as before -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Improved descriptive meta description -->
-    <meta name="description" content="Welcome to Banana Shop, your go-to online store for fresh, organic, and delicious bananas. Buy bananas online now!">
-    <!-- Keywords -->
-    <meta name="keywords" content="Bananas, Organic Bananas, Fresh Bananas, Buy Bananas Online, Fruit Store, Banana Shop">
-    <!-- Author -->
-    <meta name="author" content="Banana Shop">
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Banana Shop - Fresh Bananas Online">
-    <meta property="og:description" content="Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!">
-    <!-- Use a high-quality image in modern format with absolute URL -->
-    <meta property="og:image" content="https://yourdomain.com/images/banana_shop.webp">
-    <!-- Theme color -->
-    <meta name="theme-color" content="#ffeb3b">
-    <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        img-src 'self' https://your-cdn.com data:;
-        script-src 'self';
-        style-src 'self' 'unsafe-inline';
-        font-src 'self';
-        connect-src 'self' https://api.yourdomain.com;
-        frame-ancestors 'none';
-    ">
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Canonical link -->
-    <link rel="canonical" href="https://yourdomain.com/index.html">
-    <!-- Favicon -->
-    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-    <!-- Robots -->
-    <meta name="robots" content="index, follow">
-    <!-- Title -->
-    <title>Banana Shop - Buy Fresh Bananas Online</title>
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Store",
-      "name": "Banana Shop",
-      "image": "https://yourdomain.com/images/banana_shop.webp",
-      "description": "Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "123 Banana St",
-        "addressLocality": "Fruitville",
-        "postalCode": "12345",
-        "addressCountry": "US"
-      },
-      "telephone": "+1-234-567-8900",
-      "openingHours": "Mo-Fr 09:00-17:00",
-      "sameAs": [
-        "https://facebook.com/bananashop",
-        "https://twitter.com/bananashop",
-        "https://instagram.com/bananashop"
-      ],
-      "url": "https://yourdomain.com/"
-    }
-    </script>
-    <!-- BreadcrumbList Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://yourdomain.com/index.html"
-        }
-      ]
-    }
-    </script>
-</head>
-<body>
-    <!-- Skip link -->
-    <a href="#mainContent" class="skip-link">Skip to main content</a>
-    <!-- Header -->
-    <header>
-        <h1>Welcome to the Banana Shop</h1>
-        <!-- Navigation Menu -->
-        <nav role="navigation" aria-label="Primary Navigation">
-            <ul>
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="products.html">Products</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="cart.html">Cart</a></li>
-                <!-- Add Login/Register links -->
-                <li><a href="login.html">Login</a></li>
-                <li><a href="register.html">Register</a></li>
-                <li><a href="account.html">My Account</a></li>
-            </ul>
-        </nav>
-        <!-- Breadcrumb Navigation -->
-        <nav aria-label="Breadcrumb">
-            <ol class="breadcrumb">
-                <li aria-current="page">Home</li>
-            </ol>
-        </nav>
-        <!-- Cart Icon -->
-        <div class="cart-icon">
-            <a href="cart.html" aria-label="Cart">
-                <img src="images/cart-icon.svg" alt="Cart">
-                <span id="cart-count">0</span>
-            </a>
-        </div>
-    </header>
-    <!-- Main Content -->
-    <main id="mainContent">
-        <h2>Fresh Bananas for Sale!</h2>
-        <div class="hero">
-            <!-- Use modern image formats and lazy loading -->
-            <picture>
-                <source srcset="images/hero-bananas.webp" type="image/webp">
-                <source srcset="images/hero-bananas.jpg" type="image/jpeg">
-                <img src="images/hero-bananas.jpg" alt="Assorted Fresh Bananas" loading="lazy">
-            </picture>
-        </div>
-        <p>Discover our delicious range of bananas. Healthy, tasty, and perfect for any meal!</p>
-        <a href="products.html" class="btn">View Products</a>
-        
-        <!-- Featured Products Section -->
-        <section id="featured-products">
-            <h3>Featured Products</h3>
-            <div class="product-list">
-                <!-- Product 1 -->
-                <article class="product">
-                    <figure>
-                        <picture>
-                            <source srcset="images/organic_bananas.webp" type="image/webp">
-                            <source srcset="images/organic_bananas.jpg" type="image/jpeg">
-                            <img src="images/organic_bananas.jpg" alt="Organic Bananas - Freshly picked organic bananas from local farms." loading="lazy">
-                        </picture>
-                        <figcaption>Freshly picked organic bananas from local farms.</figcaption>
-                    </figure>
-                    <h4>Organic Bananas</h4>
-                    <p>Price: $1.00 each</p>
-                    <!-- Link to individual product page -->
-                    <a href="product-organic-bananas.html" class="btn">View Product</a>
-                </article>
-                <!-- Product 2 -->
-                <article class="product">
-                    <figure>
-                        <picture>
-                            <source srcset="images/golden_bananas.webp" type="image/webp">
-                            <source srcset="images/golden_bananas.jpg" type="image/jpeg">
-                            <img src="images/golden_bananas.jpg" alt="Golden Bananas - Sweet golden bananas with a delightful flavor." loading="lazy">
-                        </picture>
-                        <figcaption>Sweet golden bananas with a delightful flavor.</figcaption>
-                    </figure>
-                    <h4>Golden Bananas</h4>
-                    <p>Price: $0.80 each</p>
-                    <!-- Link to individual product page -->
-                    <a href="product-golden-bananas.html" class="btn">View Product</a>
-                </article>
-            </div>
-        </section>
-        
-        <!-- Customer Testimonials -->
-        <section id="testimonials">
-            <h3>What Our Customers Say</h3>
-            <blockquote>
-                "The best bananas I've ever tasted! Fresh and sweet every time." - Jane Doe
-            </blockquote>
-            <blockquote>
-                "Excellent quality and fast delivery. Highly recommend Banana Shop." - John Smith
-            </blockquote>
-        </section>
-        
-        <!-- Newsletter Signup -->
-        <section id="newsletter">
-            <h3>Subscribe to Our Newsletter</h3>
-            <form id="newsletterForm" novalidate>
-                <!-- CSRF Token -->
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <label for="newsletterEmail">Email:</label>
-                <input type="email" id="newsletterEmail" name="newsletterEmail" required aria-describedby="newsletterEmailError">
-                <div id="newsletterEmailError" role="alert" aria-live="assertive"></div>
-                <button type="submit" class="btn">Subscribe</button>
-            </form>
-        </section>
-        
-        <!-- Social Media Links -->
-        <section id="social-media">
-            <h3>Follow Us</h3>
-            <!-- Social sharing buttons -->
-            <a href="https://facebook.com/bananashop" target="_blank" rel="noopener noreferrer">Facebook</a> |
-            <a href="https://twitter.com/bananashop" target="_blank" rel="noopener noreferrer">Twitter</a> |
-            <a href="https://instagram.com/bananashop" target="_blank" rel="noopener noreferrer">Instagram</a>
-        </section>
-        
-        <!-- Toast notifications -->
-        <div id="toast" aria-live="assertive"></div>
-    </main>
-    <footer>
-        <p>&copy; 2023 Banana Shop</p>
-        <p><a href="privacy.html">Privacy Policy</a> | <a href="terms.html">Terms of Service</a></p>
-    </footer>
-    <!-- Include script files, including minified versions -->
-    <script type="module" src="index.min.js"></script>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Welcome to the File Sharing App</h1>
+{% if session.get('user_id') %}
+    <p>Hello, {{ session['username'] }}!</p>
+    <h2>Your Files:</h2>
+    {% if files %}
+    <table>
+        <tr>
+            <th>Filename</th>
+            <th>Uploaded On</th>
+            <th>Size</th>
+            <th>Actions</th>
+        </tr>
+        {% for file in files %}
+        <tr>
+            <td>{{ file['original_filename'] }}</td>
+            <td>{{ file['upload_date'] | datetimeformat }}</td>
+            <td>{{ file['file_size'] }} bytes</td>
+            <td>
+                <a href="{{ url_for('download', file_id=file['id']) }}">Download</a> |
+                <a href="{{ url_for('share', file_id=file['id']) }}">Share</a> |
+                <form class="delete-form" action="{{ url_for('delete_file', file_id=file['id']) }}" method="post">
+                    {{ csrf_token() }}
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this file?');">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>You have not uploaded any files yet.</p>
+    {% endif %}
+    <p><a href="{{ url_for('upload') }}">Upload Another File</a></p>
+{% else %}
+    <p>Please <a href="{{ url_for('login') }}">login</a> or <a href="{{ url_for('register') }}">register</a> to continue.</p>
+{% endif %}
+{% endblock %}
