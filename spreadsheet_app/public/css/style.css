@@ -1,0 +1,101 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+.container {
+  padding: 20px;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+th {
+  background-color: #f2f2f2;
+  cursor: pointer;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}
+
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+}
+
+/* Additional styles for Spreadsheet Editor */
+#spreadsheetEditor {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  overflow: auto;
+  max-height: 60vh;
+  border: 1px solid #ddd;
+}
+
+#spreadsheetEditor .row {
+  display: flex;
+}
+
+#spreadsheetEditor .row input {
+  flex: 1;
+  padding: 5px;
+  margin: 2px;
+  border: none;
+  border-bottom: 1px solid #eee;
+}
+
+#spreadsheetEditor .row input:focus {
+  outline: none;
+  border-bottom: 2px solid #4CAF50;
+}

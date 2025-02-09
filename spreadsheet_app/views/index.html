@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spreadsheet Web App - Home</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input[type="text"] {
+      padding: 8px;
+      margin: 5px 0;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      z-index: 100;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 101;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 300px;
+      border-radius: 5px;
+      text-align: center;
+    }
+    #spreadsheetList tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Spreadsheet Web Application</h1>
+  </header>
+  <div class="container">
+    <button id="createButton">Create New Spreadsheet</button>
+    <input type="text" id="searchInput" placeholder="Search spreadsheets...">
+    <button id="deleteSelected">Delete Selected</button>
+    <button id="sortName">Sort by Name</button>
+    <button id="sortDate">Sort by Date</button>
+    <table>
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll"></th>
+          <th>Name</th>
+          <th>Created At</th>
+          <th>Updated At</th>
+        </tr>
+      </thead>
+      <tbody id="spreadsheetList">
+        <!-- Spreadsheet rows will be populated here -->
+      </tbody>
+    </table>
+  </div>
+  <div id="loading" class="loading">Loading...</div>
+  <div id="errorModal" class="modal">
+    <div class="modal-content">
+      <p id="errorMessage"></p>
+      <button id="closeModal">Close</button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const spreadsheets = [
+        { id: 1, name: 'Budget 2024', createdAt: '2023-01-15', updatedAt: '2023-02-10' },
+        { id: 2, name: 'Project Plan', createdAt: '2023-03-22', updatedAt: '2023-04-18' },
+        { id: 3, name: 'Inventory List', createdAt: '2023-05-05', updatedAt: '2023-06-12' },
+      ];
+      let currentId = 4;
+      let filteredSpreadsheets = [...spreadsheets];
+
+      const spreadsheetList = document.getElementById('spreadsheetList');
+      const loading = document.getElementById('loading');
+      const errorModal = document.getElementById('errorModal');
+      const errorMessage = document.getElementById('errorMessage');
+      const closeModal = document.getElementById('closeModal');
+      const selectAll = document.getElementById('selectAll');
+      const searchInput = document.getElementById('searchInput');
+      const createButton = document.getElementById('createButton');
+      const deleteSelected = document.getElementById('deleteSelected');
+      const sortName = document.getElementById('sortName');
+      const sortDate = document.getElementById('sortDate');
+
+      function showLoading() {
+        loading.style.display = 'block';
+      }
+
+      function hideLoading() {
+        loading.style.display = 'none';
+      }
+
+      function showError(msg) {
+        errorMessage.textContent = msg;
+        errorModal.style.display = 'block';
+      }
+
+      function populateTable(data) {
+        spreadsheetList.innerHTML = '';
+        data.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><input type="checkbox" class="selectItem" data-id="${item.id}"></td>
+            <td><a href="#" class="spreadsheetLink" data-id="${item.id}">${item.name}</a></td>
+            <td>${item.createdAt}</td>
+            <td>${item.updatedAt}</td>
+          `;
+          spreadsheetList.appendChild(tr);
+        });
+      }
+
+      function refreshTable() {
+        populateTable(filteredSpreadsheets);
+      }
+
+      closeModal.addEventListener('click', function() {
+        errorModal.style.display = 'none';
+      });
+
+      window.onclick = function(event) {
+        if (event.target == errorModal) {
+          errorModal.style.display = 'none';
+        }
+      }
+
+      createButton.addEventListener('click', function() {
+        const name = prompt('Enter name for new spreadsheet:');
+        if (name) {
+          showLoading();
+          setTimeout(() => {
+            const date = new Date().toISOString().split('T')[0];
+            spreadsheets.push({
+              id: currentId++,
+              name: name,
+              createdAt: date,
+              updatedAt: date
+            });
+            filteredSpreadsheets = [...spreadsheets];
+            refreshTable();
+            hideLoading();
+          }, 500);
+        }
+      });
+
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        filteredSpreadsheets = spreadsheets.filter(s => s.name.toLowerCase().includes(query));
+        refreshTable();
+      });
+
+      deleteSelected.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.selectItem:checked');
+        if (checkboxes.length === 0) {
+          showError('No spreadsheets selected for deletion.');
+          return;
+        }
+        if (confirm(`Are you sure you want to delete ${checkboxes.length} selected spreadsheet(s)?`)) {
+          showLoading();
+          setTimeout(() => {
+            const idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.getAttribute('data-id')));
+            for (let id of idsToDelete) {
+              const index = spreadsheets.findIndex(s => s.id === id);
+              if (index !== -1) {
+                spreadsheets.splice(index, 1);
+              }
+            }
+            filteredSpreadsheets = [...spreadsheets];
+            refreshTable();
+            hideLoading();
+          }, 500);
+        }
+      });
+
+      sortName.addEventListener('click', function() {
+        filteredSpreadsheets.sort((a, b) => a.name.localeCompare(b.name));
+        refreshTable();
+      });
+
+      sortDate.addEventListener('click', function() {
+        filteredSpreadsheets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        refreshTable();
+      });
+
+      selectAll.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.selectItem');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+      });
+
+      spreadsheetList.addEventListener('change', function(e) {
+        if (e.target.classList.contains('selectItem')) {
+          const checkboxes = document.querySelectorAll('.selectItem');
+          const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+          selectAll.checked = allChecked;
+        }
+      });
+
+      spreadsheetList.addEventListener('click', function(e) {
+        if (e.target.classList.contains('spreadsheetLink')) {
+          e.preventDefault();
+          const id = parseInt(e.target.getAttribute('data-id'));
+          const sheet = spreadsheets.find(s => s.id === id);
+          if (sheet) {
+            alert(`Opening spreadsheet: ${sheet.name}`);
+          } else {
+            showError('Spreadsheet not found.');
+          }
+        }
+      });
+
+      // Initial load
+      showLoading();
+      setTimeout(() => {
+        refreshTable();
+        hideLoading();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

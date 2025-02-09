@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spreadsheet Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #spreadsheetEditor {
+      margin-top: 20px;
+      overflow: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      min-width: 100px;
+    }
+    th {
+      background-color: #f2f2f2;
+      text-align: left;
+    }
+    .loading {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5em;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+      border-radius: 5px;
+    }
+    #closeModal {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #closeModal:hover {
+      background-color: #c9302c;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Spreadsheet Editor</h1>
+  </header>
+  <div class="container">
+    <label for="sheetName">Name:</label>
+    <input type="text" id="sheetName" placeholder="Spreadsheet Name">
+    <label for="rows">Rows:</label>
+    <input type="number" id="rows" min="1" value="10">
+    <label for="columns">Columns:</label>
+    <input type="number" id="columns" min="1" value="10">
+    <button id="resizeBtn">Resize Grid</button>
+    <button id="saveBtn">Save</button>
+    <div id="spreadsheetEditor"></div>
+  </div>
+  <div id="loading" class="loading">Loading...</div>
+  <div id="errorModal" class="modal">
+    <div class="modal-content">
+      <p id="errorMessage"></p>
+      <button id="closeModal">Close</button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const resizeBtn = document.getElementById('resizeBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const spreadsheetEditor = document.getElementById('spreadsheetEditor');
+      const loading = document.getElementById('loading');
+      const errorModal = document.getElementById('errorModal');
+      const errorMessage = document.getElementById('errorMessage');
+      const closeModal = document.getElementById('closeModal');
+
+      function createTable(rows, columns) {
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+
+        const cornerTh = document.createElement('th');
+        cornerTh.innerText = '';
+        headerRow.appendChild(cornerTh);
+
+        for (let c = 0; c < columns; c++) {
+          const th = document.createElement('th');
+          th.innerText = String.fromCharCode(65 + c);
+          headerRow.appendChild(th);
+        }
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        for (let r = 1; r <= rows; r++) {
+          const row = document.createElement('tr');
+          const th = document.createElement('th');
+          th.innerText = r;
+          row.appendChild(th);
+          for (let c = 0; c < columns; c++) {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.style.width = '100%';
+            td.appendChild(input);
+            row.appendChild(td);
+          }
+          tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+        return table;
+      }
+
+      function showLoading(show) {
+        loading.style.display = show ? 'block' : 'none';
+      }
+
+      function showError(message) {
+        errorMessage.innerText = message;
+        errorModal.style.display = 'block';
+      }
+
+      closeModal.addEventListener('click', () => {
+        errorModal.style.display = 'none';
+      });
+
+      resizeBtn.addEventListener('click', () => {
+        const rows = parseInt(document.getElementById('rows').value) || 10;
+        const columns = parseInt(document.getElementById('columns').value) || 10;
+        showLoading(true);
+        setTimeout(() => {
+          spreadsheetEditor.innerHTML = '';
+          const table = createTable(rows, columns);
+          spreadsheetEditor.appendChild(table);
+          showLoading(false);
+        }, 500);
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const sheetName = document.getElementById('sheetName').value.trim();
+        if (!sheetName) {
+          showError('Spreadsheet name is required.');
+          return;
+        }
+        const table = spreadsheetEditor.querySelector('table');
+        if (!table) {
+          showError('No data to save.');
+          return;
+        }
+        const data = [];
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+          const rowData = [];
+          const inputs = row.querySelectorAll('input');
+          inputs.forEach(input => {
+            rowData.push(input.value);
+          });
+          data.push(rowData);
+        });
+        showLoading(true);
+        // Simulate saving data
+        setTimeout(() => {
+          showLoading(false);
+          alert('Spreadsheet saved successfully!');
+        }, 1000);
+      });
+
+      // Initialize default table
+      resizeBtn.click();
+    });
+  </script>
+</body>
+</html>
