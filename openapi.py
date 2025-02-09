@@ -270,8 +270,7 @@ def gap_analysis(code_text, model=DEFAULT_MODEL):
 
 # --- MAIN ORCHESTRATION (All intermediate data kept in memory) ---
 
-# Final website files will be written to the 'todo_app' directory.
-DIR = "todo_app"
+DIR = "spreadsheet_app"
 os.makedirs(DIR, exist_ok=True)
 
 # Load the base prompt from BasePrompt.txt

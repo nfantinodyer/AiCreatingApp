@@ -1,15 +1,16 @@
-Project: To-Do List Web Application
+Project: Spreadsheet Web Application
 
 Overview:
-Develop a web-based to-do list application. The application should allow users to add, view, update, and delete tasks. All tasks must be stored in a local database, and the design should be simple and user-friendly with a main page displaying the list of tasks and a form for adding new tasks. Do not implement any security features such as user authentication or encryption.
+Develop a web-based spreadsheet application that allows users to create, view, edit, and delete spreadsheets. The application should present a grid-based interface where users can input and modify cell data, perform basic calculations, and store spreadsheets in a local database. The user interface must be simple, clean, and intuitive, providing an organized layout for managing spreadsheet data. Do not implement any security features such as user authentication or encryption.
 
 Key Features & Requirements:
-- Display a list of all tasks on the main page.
-- Provide a form to add new tasks.
-- Allow users to update existing tasks.
-- Allow users to delete tasks.
-- Store tasks in a local database.
-- Use a simple and clean user interface.
+- Display a grid-based interface representing spreadsheet cells.
+- Provide functionality to create new spreadsheets.
+- Allow users to input and edit cell values.
+- Enable basic calculations within cells (e.g., sum, average).
+- Save spreadsheets in a local database.
+- Allow users to open, view, and delete existing spreadsheets.
+- Use a simple, clean, and user-friendly interface.
 - All modifications must provide complete, production-ready files.
 - When modifying or adding a file, include the full file content—not just partial updates.
 - Organize files into appropriate directories and create subdirectories as needed.
