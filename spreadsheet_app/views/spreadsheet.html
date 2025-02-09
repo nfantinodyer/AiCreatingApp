@@ -14,6 +14,21 @@
       color: white;
       padding: 20px;
       text-align: center;
+      position: relative;
+    }
+    header button {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      padding: 10px 20px;
+      background-color: #ffffff;
+      color: #4CAF50;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    header button:hover {
+      background-color: #f2f2f2;
     }
     .container {
       padding: 20px;
@@ -36,6 +51,7 @@
       color: white;
       border: none;
       cursor: pointer;
+      border-radius: 4px;
     }
     button:hover {
       background-color: #45a049;
@@ -57,6 +73,18 @@
       background-color: #f2f2f2;
       text-align: left;
     }
+    #loading {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5em;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
     .loading {
       display: none;
       position: fixed;
@@ -67,11 +95,12 @@
       background-color: rgba(255, 255, 255, 0.8);
       padding: 20px;
       border-radius: 5px;
+      z-index: 1000;
     }
     .modal {
       display: none;
       position: fixed;
-      z-index: 1;
+      z-index: 1001;
       left: 0;
       top: 0;
       width: 100%;
@@ -88,44 +117,83 @@
       max-width: 500px;
       text-align: center;
       border-radius: 5px;
+      position: relative;
     }
-    #closeModal {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #d9534f;
-      color: white;
-      border: none;
+    .modal-content .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
       cursor: pointer;
     }
-    #closeModal:hover {
-      background-color: #c9302c;
+    .modal-content .close:hover,
+    .modal-content .close:focus {
+      color: black;
+      text-decoration: none;
+    }
+    .toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 2px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1002;
+      left: 50%;
+      bottom: 30px;
+      transform: translateX(-50%);
+    }
+    .toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @keyframes fadein {
+      from {bottom: 0; opacity: 0;}
+      to {bottom: 30px; opacity: 1;}
+    }
+    @keyframes fadeout {
+      from {bottom: 30px; opacity: 1;}
+      to {bottom: 0; opacity: 0;}
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Spreadsheet Editor</h1>
+    <button id="backHomeBtn">Back to Home</button>
   </header>
   <div class="container">
-    <label for="sheetName">Name:</label>
-    <input type="text" id="sheetName" placeholder="Spreadsheet Name">
-    <label for="rows">Rows:</label>
-    <input type="number" id="rows" min="1" value="10">
-    <label for="columns">Columns:</label>
-    <input type="number" id="columns" min="1" value="10">
-    <button id="resizeBtn">Resize Grid</button>
-    <button id="saveBtn">Save</button>
-    <div id="spreadsheetEditor"></div>
-  </div>
-  <div id="loading" class="loading">Loading...</div>
-  <div id="errorModal" class="modal">
-    <div class="modal-content">
-      <p id="errorMessage"></p>
-      <button id="closeModal">Close</button>
+    <div>
+      <label for="sheetName">Sheet Name:</label>
+      <input type="text" id="sheetName" placeholder="Spreadsheet Name">
     </div>
+    <div>
+      <label for="rows">Rows:</label>
+      <input type="number" id="rows" min="1" value="20">
+      <label for="columns">Columns:</label>
+      <input type="number" id="columns" min="1" value="10">
+      <button id="resizeBtn">Resize Grid</button>
+      <button id="saveBtn">Save</button>
+    </div>
+    <div id="spreadsheetEditor"></div>
+    <div id="loading" class="loading">Loading...</div>
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+      <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <p id="errorMessage">An error has occurred.</p>
+      </div>
+    </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const backHomeBtn = document.getElementById('backHomeBtn');
       const resizeBtn = document.getElementById('resizeBtn');
       const saveBtn = document.getElementById('saveBtn');
       const spreadsheetEditor = document.getElementById('spreadsheetEditor');
@@ -133,6 +201,7 @@
       const errorModal = document.getElementById('errorModal');
       const errorMessage = document.getElementById('errorMessage');
       const closeModal = document.getElementById('closeModal');
+      const toast = document.getElementById('toast');
 
       function createTable(rows, columns) {
         const table = document.createElement('table');
@@ -180,12 +249,30 @@
         errorModal.style.display = 'block';
       }
 
+      function showToast(message) {
+        toast.innerText = message;
+        toast.className = 'toast show';
+        setTimeout(() => {
+          toast.className = toast.className.replace('show', '');
+        }, 3000);
+      }
+
       closeModal.addEventListener('click', () => {
         errorModal.style.display = 'none';
       });
 
+      window.addEventListener('click', (event) => {
+        if (event.target == errorModal) {
+          errorModal.style.display = 'none';
+        }
+      });
+
+      backHomeBtn.addEventListener('click', () => {
+        window.location.href = '/';
+      });
+
       resizeBtn.addEventListener('click', () => {
-        const rows = parseInt(document.getElementById('rows').value) || 10;
+        const rows = parseInt(document.getElementById('rows').value) || 20;
         const columns = parseInt(document.getElementById('columns').value) || 10;
         showLoading(true);
         setTimeout(() => {
@@ -221,7 +308,7 @@
         // Simulate saving data
         setTimeout(() => {
           showLoading(false);
-          alert('Spreadsheet saved successfully!');
+          showToast('Spreadsheet saved successfully!');
         }, 1000);
       });
 

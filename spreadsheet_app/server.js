@@ -1,52 +1,60 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4, validate: uuidValidate, version: uuidVersion } = require('uuid');
+const sqlite3 = require('sqlite3').verbose();
+const { open } = require('sqlite');
 
 const app = express();
-const PORT = 3000;
-const DATA_FILE = path.join(__dirname, 'data.json');
+const PORT = process.env.PORT || 3000;
 
+// Initialize SQLite database
+let db;
+const initializeDatabase = async () => {
+  db = await open({
+    filename: path.join(__dirname, 'database.sqlite'),
+    driver: sqlite3.Database
+  });
+
+  await db.run(`
+    CREATE TABLE IF NOT EXISTS spreadsheets (
+      id TEXT PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      rows INTEGER NOT NULL,
+      columns INTEGER NOT NULL,
+      data TEXT,
+      createdAt TEXT NOT NULL,
+      updatedAt TEXT NOT NULL
+    )
+  `);
+};
+
+// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'html');
 
-// Helper function to read data from JSON file
-const readData = () => {
-  if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify({ spreadsheets: [] }, null, 2));
-  }
-  const data = fs.readFileSync(DATA_FILE);
-  return JSON.parse(data);
-};
+// Helper Functions
+const isUUID = (id) => uuidValidate(id) && uuidVersion(id) === 4;
 
-// Helper function to write data to JSON file
-const writeData = (data) => {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-};
-
-// Validate spreadsheet data
 const validateSpreadsheet = (spreadsheet, isUpdate = false) => {
   const { name, rows, columns, data } = spreadsheet;
-  if (!name || typeof name !== 'string' || name.trim() === '') {
-    return 'Name must be a non-empty string.';
+  if (!isUpdate || (isUpdate && name !== undefined)) {
+    if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
+      return 'Name must be a non-empty string.';
+    }
   }
-  if (!Number.isInteger(rows) || rows <= 0) {
-    return 'Rows must be a positive integer.';
+  if (!isUpdate || (isUpdate && rows !== undefined)) {
+    if (rows !== undefined && (!Number.isInteger(rows) || rows <= 0)) {
+      return 'Rows must be a positive integer.';
+    }
   }
-  if (!Number.isInteger(columns) || columns <= 0) {
-    return 'Columns must be a positive integer.';
+  if (!isUpdate || (isUpdate && columns !== undefined)) {
+    if (columns !== undefined && (!Number.isInteger(columns) || columns <= 0)) {
+      return 'Columns must be a positive integer.';
+    }
   }
-  if (!Array.isArray(data)) {
-    return 'Data must be an array.';
-  }
-  if (data.length !== rows) {
-    return 'Data rows do not match the specified number of rows.';
-  }
-  for (let row of data) {
-    if (!Array.isArray(row) || row.length !== columns) {
-      return 'Data columns do not match the specified number of columns.';
+  if (!isUpdate || (isUpdate && data !== undefined)) {
+    if (data !== undefined && (typeof data !== 'object' || Array.isArray(data))) {
+      return 'Data must be an object with cell keys.';
     }
   }
   return null;
@@ -58,150 +66,161 @@ app.get('/', (req, res) => {
 });
 
 app.get('/spreadsheet/:id', (req, res) => {
+  const { id } = req.params;
+  if (!isUUID(id)) {
+    return res.status(400).sendFile(path.join(__dirname, 'views', 'error.html'));
+  }
   res.sendFile(path.join(__dirname, 'views', 'spreadsheet.html'));
 });
 
-// Route to create a new spreadsheet and redirect to its editor
-app.get('/spreadsheet/new', (req, res) => {
+app.get('/spreadsheet/new', async (req, res) => {
   try {
-    const defaultName = 'Untitled Spreadsheet';
-    let uniqueName = defaultName;
+    const defaultNameBase = 'Untitled Spreadsheet';
+    let uniqueName = defaultNameBase;
     let counter = 1;
-    const data = readData();
-    while (data.spreadsheets.find(s => s.name.toLowerCase() === uniqueName.toLowerCase())) {
-      uniqueName = `${defaultName} (${counter++})`;
+    const existingNames = await db.all('SELECT name FROM spreadsheets');
+    const existingNamesLower = existingNames.map(s => s.name.toLowerCase());
+    while (existingNamesLower.includes(uniqueName.toLowerCase())) {
+      uniqueName = `${defaultNameBase} (${counter++})`;
     }
 
-    const newSpreadsheet = {
-      id: uuidv4(),
-      name: uniqueName,
-      rows: 10,
-      columns: 10,
-      data: Array.from({ length: 10 }, () => Array(10).fill('')),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const id = uuidv4();
+    const now = new Date().toISOString();
+    await db.run(
+      `INSERT INTO spreadsheets (id, name, rows, columns, data, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, uniqueName, 20, 10, JSON.stringify({}), now, now]
+    );
 
-    data.spreadsheets.push(newSpreadsheet);
-    writeData(data);
-
-    res.redirect(`/spreadsheet/${newSpreadsheet.id}`);
+    res.redirect(`/spreadsheet/${id}`);
   } catch (error) {
-    res.status(500).send('Failed to create a new spreadsheet.');
+    res.status(500).sendFile(path.join(__dirname, 'views', 'error.html'));
   }
 });
 
 // API Endpoints
-app.get('/api/spreadsheets', (req, res) => {
+app.get('/api/spreadsheets', async (req, res) => {
   try {
-    const data = readData();
-    res.json(data.spreadsheets);
+    const spreadsheets = await db.all('SELECT id, name, rows, columns, createdAt, updatedAt FROM spreadsheets');
+    res.json(spreadsheets);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve spreadsheets.' });
+    res.status(500).json({ error: 'Failed to fetch spreadsheets.' });
   }
 });
 
-app.post('/api/spreadsheets', (req, res) => {
-  try {
-    const { name, rows, columns, data } = req.body;
-    const validationError = validateSpreadsheet(req.body);
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
-    }
+app.post('/api/spreadsheets', async (req, res) => {
+  const { name, rows, columns } = req.body;
+  const validationError = validateSpreadsheet({ name, rows, columns, data: {} }, false);
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
 
-    const existing = readData().spreadsheets.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase()
+  try {
+    const finalName = name || 'Untitled Spreadsheet';
+    const now = new Date().toISOString();
+    const id = uuidv4();
+    await db.run(
+      `INSERT INTO spreadsheets (id, name, rows, columns, data, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, finalName, rows || 20, columns || 10, JSON.stringify({}), now, now]
     );
-    if (existing) {
-      return res.status(400).json({ error: 'Spreadsheet name must be unique.' });
-    }
-
-    const newSpreadsheet = {
-      id: uuidv4(),
-      name,
-      rows,
-      columns,
-      data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const dataObj = readData();
-    dataObj.spreadsheets.push(newSpreadsheet);
-    writeData(dataObj);
-
-    res.status(201).json(newSpreadsheet);
+    res.status(201).json({ id, name: finalName });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create spreadsheet.' });
+    if (error.message.includes('UNIQUE constraint failed')) {
+      res.status(400).json({ error: 'Spreadsheet name must be unique.' });
+    } else {
+      res.status(500).json({ error: 'Failed to create spreadsheet.' });
+    }
   }
 });
 
-app.get('/api/spreadsheets/:id', (req, res) => {
+app.get('/api/spreadsheets/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!isUUID(id)) {
+    return res.status(400).json({ error: 'Invalid Spreadsheet ID' });
+  }
+
   try {
-    const data = readData();
-    const spreadsheet = data.spreadsheets.find((s) => s.id === req.params.id);
+    const spreadsheet = await db.get('SELECT * FROM spreadsheets WHERE id = ?', [id]);
     if (!spreadsheet) {
-      return res.status(404).json({ error: 'Spreadsheet not found.' });
+      return res.status(404).json({ error: 'Spreadsheet not found' });
     }
+    spreadsheet.data = JSON.parse(spreadsheet.data || '{}');
     res.json(spreadsheet);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve spreadsheet.' });
   }
 });
 
-app.put('/api/spreadsheets/:id', (req, res) => {
+app.put('/api/spreadsheets/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!isUUID(id)) {
+    return res.status(400).json({ error: 'Invalid Spreadsheet ID' });
+  }
+  const { name, rows, columns, cellData } = req.body;
+  const validationError = validateSpreadsheet({ name, rows, columns, data: cellData }, true);
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
   try {
-    const data = readData();
-    const index = data.spreadsheets.findIndex((s) => s.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Spreadsheet not found.' });
+    const spreadsheet = await db.get('SELECT * FROM spreadsheets WHERE id = ?', [id]);
+    if (!spreadsheet) {
+      return res.status(404).json({ error: 'Spreadsheet not found' });
     }
 
-    const { name, rows, columns, data: spreadsheetData } = req.body;
-    const validationError = validateSpreadsheet(req.body, true);
-    if (validationError) {
-      return res.status(400).json({ error: validationError });
-    }
+    const finalName = name !== undefined ? name : spreadsheet.name;
+    const finalRows = rows !== undefined ? rows : spreadsheet.rows;
+    const finalColumns = columns !== undefined ? columns : spreadsheet.columns;
+    const finalData = cellData !== undefined ? JSON.stringify(cellData) : spreadsheet.data;
+    const now = new Date().toISOString();
 
-    // Check for unique name excluding current spreadsheet
-    const duplicate = data.spreadsheets.find(
-      (s) => s.name.toLowerCase() === name.toLowerCase() && s.id !== req.params.id
+    await db.run(
+      `UPDATE spreadsheets
+       SET name = ?, rows = ?, columns = ?, data = ?, updatedAt = ?
+       WHERE id = ?`,
+      [finalName, finalRows, finalColumns, finalData, now, id]
     );
-    if (duplicate) {
-      return res.status(400).json({ error: 'Spreadsheet name must be unique.' });
-    }
 
-    data.spreadsheets[index] = {
-      ...data.spreadsheets[index],
-      name,
-      rows,
-      columns,
-      data: spreadsheetData,
-      updatedAt: new Date().toISOString(),
-    };
-
-    writeData(data);
-    res.json(data.spreadsheets[index]);
+    res.json({ message: 'Spreadsheet updated successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update spreadsheet.' });
+    if (error.message.includes('UNIQUE constraint failed')) {
+      res.status(400).json({ error: 'Spreadsheet name must be unique.' });
+    } else {
+      res.status(500).json({ error: 'Failed to update spreadsheet.' });
+    }
   }
 });
 
-app.delete('/api/spreadsheets/:id', (req, res) => {
+app.delete('/api/spreadsheets/:id', async (req, res) => {
+  const { id } = req.params;
+  if (!isUUID(id)) {
+    return res.status(400).json({ error: 'Invalid Spreadsheet ID' });
+  }
+
   try {
-    const data = readData();
-    const index = data.spreadsheets.findIndex((s) => s.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Spreadsheet not found.' });
+    const result = await db.run('DELETE FROM spreadsheets WHERE id = ?', [id]);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Spreadsheet not found' });
     }
-    data.spreadsheets.splice(index, 1);
-    writeData(data);
-    res.json({ message: 'Spreadsheet deleted successfully.' });
+    res.json({ message: 'Spreadsheet deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete spreadsheet.' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+// Error Handling for Undefined Routes
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
 });
+
+// Start Server
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to initialize database:', err);
+  });

@@ -1,15 +1,15 @@
-```json
 {
   "name": "spreadsheet-web-app",
   "version": "1.0.0",
-  "description": "A web-based spreadsheet application",
+  "description": "A robust web-based spreadsheet application.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^4.1.2"
   }
 }
-```

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Spreadsheet Web App - Home</title>
+  <title>Spreadsheet Application</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,6 +14,21 @@
       color: white;
       padding: 20px;
       text-align: center;
+      position: relative;
+    }
+    #backHomeBtn {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #f44336;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #backHomeBtn:hover {
+      background-color: #da190b;
     }
     .container {
       padding: 20px;
@@ -83,18 +98,46 @@
       border-radius: 5px;
       text-align: center;
     }
-    #spreadsheetList tr:hover {
+    #spreadsheetsList tr:hover {
       background-color: #f1f1f1;
+    }
+    .toast {
+      visibility: hidden;
+      min-width: 250px;
+      margin-left: -125px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 2px;
+      padding: 16px;
+      position: fixed;
+      z-index: 102;
+      left: 50%;
+      bottom: 30px;
+      font-size: 17px;
+    }
+    .toast.show {
+      visibility: visible;
+      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @keyframes fadein {
+      from { bottom: 0; opacity: 0; }
+      to { bottom: 30px; opacity: 1; }
+    }
+    @keyframes fadeout {
+      from { bottom: 30px; opacity: 1; }
+      to { bottom: 0; opacity: 0; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Spreadsheet Web Application</h1>
+    <button id="backHomeBtn">Back to Home</button>
+    <h1>Spreadsheet Application</h1>
   </header>
   <div class="container">
-    <button id="createButton">Create New Spreadsheet</button>
-    <input type="text" id="searchInput" placeholder="Search spreadsheets...">
+    <input type="text" id="searchInput" placeholder="Search spreadsheets..." class="search-input">
+    <button id="createBtn">Create New Spreadsheet</button>
     <button id="deleteSelected">Delete Selected</button>
     <button id="sortName">Sort by Name</button>
     <button id="sortDate">Sort by Date</button>
@@ -107,17 +150,20 @@
           <th>Updated At</th>
         </tr>
       </thead>
-      <tbody id="spreadsheetList">
+      <tbody id="spreadsheetsList">
         <!-- Spreadsheet rows will be populated here -->
       </tbody>
     </table>
-  </div>
-  <div id="loading" class="loading">Loading...</div>
-  <div id="errorModal" class="modal">
-    <div class="modal-content">
-      <p id="errorMessage"></p>
-      <button id="closeModal">Close</button>
+    <div id="loading" class="loading">Loading...</div>
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+      <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <p id="errorMessage">An error has occurred.</p>
+      </div>
     </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -129,17 +175,19 @@
       let currentId = 4;
       let filteredSpreadsheets = [...spreadsheets];
 
-      const spreadsheetList = document.getElementById('spreadsheetList');
+      const spreadsheetsList = document.getElementById('spreadsheetsList');
       const loading = document.getElementById('loading');
       const errorModal = document.getElementById('errorModal');
       const errorMessage = document.getElementById('errorMessage');
       const closeModal = document.getElementById('closeModal');
       const selectAll = document.getElementById('selectAll');
       const searchInput = document.getElementById('searchInput');
-      const createButton = document.getElementById('createButton');
+      const createBtn = document.getElementById('createBtn');
       const deleteSelected = document.getElementById('deleteSelected');
       const sortName = document.getElementById('sortName');
       const sortDate = document.getElementById('sortDate');
+      const toast = document.getElementById('toast');
+      const backHomeBtn = document.getElementById('backHomeBtn');
 
       function showLoading() {
         loading.style.display = 'block';
@@ -154,8 +202,14 @@
         errorModal.style.display = 'block';
       }
 
+      function showToast(message) {
+        toast.textContent = message;
+        toast.className = 'toast show';
+        setTimeout(() => { toast.className = toast.className.replace('show', ''); }, 3000);
+      }
+
       function populateTable(data) {
-        spreadsheetList.innerHTML = '';
+        spreadsheetsList.innerHTML = '';
         data.forEach(item => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -164,7 +218,7 @@
             <td>${item.createdAt}</td>
             <td>${item.updatedAt}</td>
           `;
-          spreadsheetList.appendChild(tr);
+          spreadsheetsList.appendChild(tr);
         });
       }
 
@@ -182,7 +236,7 @@
         }
       }
 
-      createButton.addEventListener('click', function() {
+      createBtn.addEventListener('click', function() {
         const name = prompt('Enter name for new spreadsheet:');
         if (name) {
           showLoading();
@@ -197,6 +251,7 @@
             filteredSpreadsheets = [...spreadsheets];
             refreshTable();
             hideLoading();
+            showToast('Spreadsheet created successfully.');
           }, 500);
         }
       });
@@ -226,6 +281,7 @@
             filteredSpreadsheets = [...spreadsheets];
             refreshTable();
             hideLoading();
+            showToast('Selected spreadsheets deleted successfully.');
           }, 500);
         }
       });
@@ -233,11 +289,13 @@
       sortName.addEventListener('click', function() {
         filteredSpreadsheets.sort((a, b) => a.name.localeCompare(b.name));
         refreshTable();
+        showToast('Spreadsheets sorted by name.');
       });
 
       sortDate.addEventListener('click', function() {
         filteredSpreadsheets.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
         refreshTable();
+        showToast('Spreadsheets sorted by date.');
       });
 
       selectAll.addEventListener('change', function() {
@@ -245,7 +303,7 @@
         checkboxes.forEach(cb => cb.checked = selectAll.checked);
       });
 
-      spreadsheetList.addEventListener('change', function(e) {
+      spreadsheetsList.addEventListener('change', function(e) {
         if (e.target.classList.contains('selectItem')) {
           const checkboxes = document.querySelectorAll('.selectItem');
           const allChecked = Array.from(checkboxes).every(cb => cb.checked);
@@ -253,7 +311,7 @@
         }
       });
 
-      spreadsheetList.addEventListener('click', function(e) {
+      spreadsheetsList.addEventListener('click', function(e) {
         if (e.target.classList.contains('spreadsheetLink')) {
           e.preventDefault();
           const id = parseInt(e.target.getAttribute('data-id'));
@@ -264,6 +322,10 @@
             showError('Spreadsheet not found.');
           }
         }
+      });
+
+      backHomeBtn.addEventListener('click', function() {
+        window.location.href = '/';
       });
 
       // Initial load

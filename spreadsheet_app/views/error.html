@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Error</h1>
+        <button id="backHomeBtn">Back to Home</button>
+    </header>
+    <div class="container">
+        <p>There was an issue processing your request. Please try again later.</p>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('backHomeBtn').addEventListener('click', function() {
+                window.location.href = '/';
+            });
+        });
+    </script>
+</body>
+</html>

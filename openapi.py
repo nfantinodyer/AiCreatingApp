@@ -3,34 +3,26 @@ import json  # Only used to load the API key.
 import os
 import re
 import sys
+import time  # For optional delays on retry
 
-# Load the OpenAI API key from a config file.
+# ================= Global Configuration =================
+
+# OUTPUT_DIR can be adjusted to point to your desired application output directory.
+OUTPUT_DIR = "spreadsheet_app"  
+
+# Load API key from configuration file.
 with open("config.json", "r") as config_file:
     config = json.load(config_file)
 openai.api_key = config["api_key"]
 
-# Reconfigure sys.stdout to use UTF-8 (available in Python 3.7+)
-try:
-    sys.stdout.reconfigure(encoding='utf-8')
-except Exception:
-    pass
+# Configure candidate models (order matters: try first then fall back)
+CANDIDATE_MODELS = ["o1-mini", "gpt-4o"]
+DEFAULT_MODEL = CANDIDATE_MODELS[0]
 
-def remove_triple_backtick_lines(directory):
-    """
-    Walk through the given directory and its subdirectories.
-    For each .html, .js, .css, .py, .txt, or .log file found,
-    remove any lines that contain triple backticks ('```'),
-    then overwrite the file with the filtered content.
-    """
-    for root, dirs, files in os.walk(directory):
-        for filename in files:
-            if filename.endswith(('.html', '.js', '.css', '.py', '.txt', '.log')):
-                file_path = os.path.join(root, filename)
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                filtered_lines = [line for line in lines if '```' not in line]
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    f.writelines(filtered_lines)
+# Parameters to control generation scaling.
+INITIAL_VARIANT_COUNT = 8  # Change this to any number to scale the initial generation.
+
+# ================= Utility Functions =================
 
 def safe_print(text):
     """
@@ -41,6 +33,39 @@ def safe_print(text):
         print(text)
     except UnicodeEncodeError:
         print(text.encode('utf-8', errors='replace').decode('utf-8'))
+
+def remove_triple_backtick_lines(directory):
+    """
+    Walk through the given directory and its subdirectories.
+    For each .html, .js, .css, .py, .txt, or .log file found,
+    remove any lines that contain triple backticks ('```'),
+    then overwrite the file with the filtered content.
+    """
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            file_path = os.path.join(root, filename)
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            filtered_lines = [line for line in lines if '```' not in line]
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.writelines(filtered_lines)
+
+def load_feedback(feedback_path="feedback.txt"):
+    """
+    If the specified feedback file exists, return its content; otherwise, return an empty string.
+    """
+    if os.path.exists(feedback_path):
+        with open(feedback_path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    return ""
+
+def clear_feedback(feedback_path="feedback.txt"):
+    """
+    Clear all text from the feedback file.
+    """
+    if os.path.exists(feedback_path):
+        with open(feedback_path, "w", encoding="utf-8") as f:
+            f.write("")
 
 def parse_files(text):
     """
@@ -87,21 +112,147 @@ def write_files(file_dict, output_directory):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
-# --- New: Auditor Functions ---
+# ================= API Wrapper Functions =================
 
-def audit_file(original_code, new_code, model="o1-mini"):
+def call_openai_api(prompt, model=DEFAULT_MODEL, max_retries=3):
     """
-    You are an expert code integrator. Your task is to merge modifications into a full,
-    complete, and ready-to-run file. If the revised version contains only partial changes 
-    or instructions such as "do the same as before," incorporate these changes into the complete 
-    original file. NEVER output placeholder text like "Replace with a secure key in production."
-    Always provide fully working code. Do not include any commentary.
+    Wrapper for calling the OpenAI API.
+    It tries the candidate models in order if an error occurs (e.g. usage limit reached).
+    """
+    for candidate in CANDIDATE_MODELS:
+        current_model = candidate
+        for attempt in range(max_retries):
+            try:
+                response = openai.chat.completions.create(
+                    model=current_model,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.choices[0].message.content
+            except openai.error.OpenAIError as e:
+                safe_print(f"API call using model {current_model} failed on attempt {attempt + 1}: {e}")
+                time.sleep(1)  # Optional: pause briefly before retrying.
+        safe_print(f"Switching from model {current_model} due to repeated errors.")
+    raise Exception("All candidate models failed to process the prompt.")
+
+# ================= Generation and Review Functions =================
+
+def generate_initial_code(prompt, model=DEFAULT_MODEL):
+    """
+    Generate complete, working code based on the given prompt.
+    The output must strictly follow the required header/footer format.
+    """
+    full_prompt = (
+        prompt + "\n\n"
+        "Return your output in the following format:\n"
+        "For each file, output a header line as follows:\n"
+        "### filename: <filename> ###\n"
+        "Then output the complete file content, and finally output a footer line:\n"
+        "### end ###\n"
+        "The code must be complete, self-contained, and ready-to-run immediately. Do not include any extra commentary."
+    )
+    return call_openai_api(full_prompt, model=model)
+
+def double_check_pair(code_a, code_b, model=DEFAULT_MODEL):
+    """
+    Compare two versions of code and merge the best improvements from both.
+    The final output must be complete, self-contained, and fully functional.
+    """
+    double_prompt = (
+        "You are a master integrator. Compare the two versions of code below and produce a final merged version that incorporates the best improvements from both. "
+        "The final output must be complete, self-contained, and fully functional, with no placeholder text or commentary.\n\n"
+        "Version A:\n" + code_a + "\n\n"
+        "Version B:\n" + code_b + "\n\n"
+        "Return the merged code in the following format:\n"
+        "### filename: <filename> ###\n"
+        "<complete file content>\n"
+        "### end ###"
+    )
+    return call_openai_api(double_prompt, model=model)
+
+def merge_variants(variants, model=DEFAULT_MODEL):
+    """
+    Repeatedly merge a list of code variants pairwise until only one variant remains.
+    If the list length is odd, the last variant is carried over to the next round.
+    Returns the final merged variant.
+    """
+    current_variants = variants[:]
+    round_number = 1
+    while len(current_variants) > 1:
+        safe_print(f"Merging round {round_number}: {len(current_variants)} variants to merge.")
+        merged_variants = []
+        # Merge in pairs.
+        for i in range(0, len(current_variants) - 1, 2):
+            merged = double_check_pair(current_variants[i], current_variants[i+1], model=model)
+            merged_variants.append(merged)
+        # If odd number of variants, carry the last one over.
+        if len(current_variants) % 2 == 1:
+            merged_variants.append(current_variants[-1])
+        current_variants = merged_variants
+        round_number += 1
+    return current_variants[0]
+
+def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
+    """
+    Review the provided code and produce a corrected, fully integrated version.
+    The output must use the header/footer format, with no placeholder text or extra commentary.
+    """
+    full_prompt = (
+        reviewer_prompt + "\n\n"
+        "Return the corrected code in the following format:\n"
+        "For each file, begin with a header line: '### filename: <filename> ###'\n"
+        "Follow with the complete file content, then end with: '### end ###'\n"
+        "Do not include any extra commentary.\n\n"
+        "Here is the code:\n" + code + "\n\n"
+        "Ensure the final output is complete and fully functional."
+    )
+    return call_openai_api(full_prompt, model=model)
+
+def aggregate_reviews(original_code, review1, review2, model=DEFAULT_MODEL):
+    """
+    Compare the original code with two reviewed versions and merge the best improvements into a final version.
+    The output must be complete and fully functional using the specified header/footer format.
+    """
+    aggregator_prompt = (
+        "You are a master integrator of code revisions. Your task is to compare two reviewed versions of the code along with the original version, "
+        "and produce a final merged version that incorporates the best improvements from all versions. "
+        "The final output must be complete, self-contained, and immediately runnable. "
+        "Do not include any placeholder text or commentary. Every file must be output in full.\n\n"
+        "Original Code:\n" + original_code +
+        "\n\nReviewer 1 Revised Code:\n" + review1 +
+        "\n\nReviewer 2 Revised Code:\n" + review2 +
+        "\n\nReturn the final merged version in the following format:\n"
+        "### filename: <filename> ###\n"
+        "<complete file content>\n"
+        "### end ###"
+    )
+    return call_openai_api(aggregator_prompt, model=model)
+
+def gap_analysis(code_text, model=DEFAULT_MODEL):
+    """
+    Analyze the given code for missing components, errors, or improvements to ensure full functionality.
+    Do not propose security features or placeholder instructions.
+    Return only the essential suggestions in plain text.
+    """
+    analysis_prompt = (
+        "Analyze the following code for a web-based application. "
+        "Identify any missing components, errors, or areas for improvement that would ensure the code is fully complete and ready-to-run. "
+        "Do not propose any security features or placeholder instructions. "
+        "Provide only the essential suggestions in plain text.\n\n"
+        + code_text
+    )
+    return call_openai_api(analysis_prompt, model=model)
+
+def audit_file(original_code, new_code, model=DEFAULT_MODEL):
+    """
+    Merge modifications into the original file so that the final output is complete and fully functional.
+    Any partial changes or instructions like 'do the same as before' must be fully integrated.
+    No placeholder text is allowed.
     """
     audit_prompt = (
-        "You are an expert code integrator. Your task is to produce a complete, self-contained version of a file by merging any modifications into the original content. "
-        "If the revised version is partial or contains instructions like 'do the same as before', integrate these changes so that the final file is complete and fully working. "
-        "Ensure that no placeholder text (such as 'Replace with a secure key in production') remains; provide real, working code out-of-the-box. "
-        "Do not include any commentary in your output.\n\n"
+        "You are a highly experienced code integrator. Your task is to merge any modifications into the original file so that the final output is complete, self-contained, and fully functional. "
+        "If the revised version contains only partial changes or instructions like 'do the same as before', integrate those changes into the full file. "
+        "Under no circumstances should any placeholder text remain. Provide actual, working code that runs out-of-the-box. "
+        "Do not include any commentary or explanation.\n\n"
         "Original file content:\n"
         "----------------------\n"
         f"{original_code}\n"
@@ -111,17 +262,12 @@ def audit_file(original_code, new_code, model="o1-mini"):
         f"{new_code}\n"
         "----------------------\n"
     )
-    response = openai.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": audit_prompt}],
-    )
-    return response.choices[0].message.content
+    return call_openai_api(audit_prompt, model=model)
 
-def audited_write_files(new_file_dict, output_directory, model="o1-mini"):
+def audited_write_files(new_file_dict, output_directory, model=DEFAULT_MODEL):
     """
-    For each file to be written, if an original version exists, call the auditor function 
-    to merge the new content with the existing file to produce a complete and fully functional file.
-    Then, write the audited content. This supports files in subdirectories.
+    For each file to be written, if an original version exists in the output directory,
+    merge the new content with the existing file using the auditor function, then write the audited content to disk.
     """
     for filename, new_content in new_file_dict.items():
         file_path = os.path.join(output_directory, filename)
@@ -141,12 +287,10 @@ def audited_write_files(new_file_dict, output_directory, model="o1-mini"):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(audited_content)
 
-# --- Helper: Load the Base Prompt from a file ---
 def load_base_prompt(prompt_file="BasePrompt.txt"):
     """
     Load the base prompt from the specified file.
-    If the file is not found, use a default prompt tailored for a to-do list application.
-    The prompt instructs the AI to produce complete, ready-to-run code with no placeholder text.
+    If the file is missing, return a default generic prompt.
     """
     if os.path.exists(prompt_file):
         with open(prompt_file, "r", encoding="utf-8") as f:
@@ -154,141 +298,33 @@ def load_base_prompt(prompt_file="BasePrompt.txt"):
     else:
         safe_print(f"Warning: {prompt_file} not found. Using a default prompt.")
         return (
-            "I'm building a simple, fully functional web-based To-Do List application using Python and Flask. "
-            "The application should allow users to add, view, update, and delete tasks, storing them in a SQLite database. "
+            "I'm building a fully functional web-based application using Python and Flask. "
+            "The application requirements will be provided in the base prompt. "
             "All files must be complete and ready-to-run out-of-the-box, with no placeholder text or insecure instructions. "
-            "When modifying any file, provide the entire file content. Do not include any commentary or instructions; output code only. "
+            "When modifying any file, include the entire file content. Do not include any commentary or instructions; output code only. "
             "Organize files into appropriate directories (e.g., templates, static/css)."
         )
 
-# --- Model Call Functions (using o1-mini or o1-preview) ---
-DEFAULT_MODEL = "o1-mini"
+# ================= Main Orchestration =================
 
-def generate_initial_code(prompt, model=DEFAULT_MODEL):
-    """
-    Generate complete, working code based on the given prompt.
-    The output must follow the specified format: each file is preceded by a header line and followed by a footer line.
-    Do not include any extra commentary or placeholder text.
-    """
-    full_prompt = (
-        prompt + "\n\n"
-        "Return your output in the following format:\n"
-        "For each file, output a header line as:\n"
-        "### filename: <filename> ###\n"
-        "Then output the complete file content on subsequent lines, followed by a footer line:\n"
-        "### end ###\n"
-        "Ensure the code is fully complete, self-contained, and ready-to-run. Do not include any commentary."
-    )
-    response = openai.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": full_prompt}],
-    )
-    return response.choices[0].message.content
+def main():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-def load_feedback(feedback_path="feedback.txt"):
-    """
-    If the specified feedback file exists, return its content; otherwise, return an empty string.
-    """
-    if os.path.exists(feedback_path):
-        with open(feedback_path, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    return ""
+    # Load the base prompt.
+    base_prompt = load_base_prompt("BasePrompt.txt")
 
-def clear_feedback(feedback_path="feedback.txt"):
-    """
-    Clear all text from the feedback file.
-    """
-    if os.path.exists(feedback_path):
-        with open(feedback_path, "w", encoding="utf-8") as f:
-            f.write("")
+    max_iterations = 5
+    iteration = 0
+    previous_aggregated_code = ""
 
-def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
-    """
-    Review the provided code and produce a corrected, fully integrated version.
-    Your output must contain the complete code for each file, with no partial updates or placeholder text.
-    Do not include any commentary.
-    """
-    full_prompt = (
-        reviewer_prompt + "\n\n"
-        "Return the corrected code in the following format:\n"
-        "For each file, begin with a header line: '### filename: <filename> ###'\n"
-        "Follow with the complete file content, then end with: '### end ###'\n"
-        "Do not include any additional commentary.\n\n"
-        "Here is the code:\n" + code + "\n\n"
-        "Ensure the final output is complete and working."
-    )
-    response = openai.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": full_prompt}],
-    )
-    return response.choices[0].message.content
+    while iteration < max_iterations:
+        safe_print(f"\n===== Iteration {iteration+1} =====\n")
 
-def aggregate_reviews(original_code, review1, review2, model=DEFAULT_MODEL):
-    """
-    Compare the original code and two revised versions provided by independent reviewers.
-    Merge the best improvements into a final, complete version of each file.
-    Ensure that the final output is fully working and contains no placeholder text.
-    Return the merged code in the same file format without any commentary.
-    """
-    aggregator_prompt = (
-        "You are to merge two reviewed versions of code with the original version. "
-        "Compare the changes, and integrate the best improvements into complete, self-contained files that are ready-to-run. "
-        "Do not output any placeholder text or commentary. Every file must be provided in full.\n\n"
-        "Original Code:\n" + original_code +
-        "\n\nReviewer 1 Revised Code:\n" + review1 +
-        "\n\nReviewer 2 Revised Code:\n" + review2 +
-        "\n\nReturn the final merged version in the format:\n"
-        "### filename: <filename> ###\n"
-        "<complete file content>\n"
-        "### end ###"
-    )
-    response = openai.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": aggregator_prompt}],
-    )
-    return response.choices[0].message.content
-
-def gap_analysis(code_text, model=DEFAULT_MODEL):
-    """
-    Analyze the provided code for missing features or improvements.
-    Identify issues and suggest modifications to ensure that the code is complete and ready-to-run.
-    Do not include any security additions or placeholder text; focus on creating a working foundation.
-    Return only the suggestions without additional commentary.
-    """
-    analysis_prompt = (
-        "Review the following code for a simple web-based To-Do List application. "
-        "Identify any missing features, errors, or areas for improvement to make the code fully complete and working out-of-the-box. "
-        "Do not include any security-related additions or placeholder instructions. "
-        "Provide only the necessary suggestions in plain text.\n\n"
-        + code_text
-    )
-    response = openai.chat.completions.create(
-        model=model,
-        messages=[{"role": "user", "content": analysis_prompt}],
-    )
-    return response.choices[0].message.content
-
-# --- MAIN ORCHESTRATION (All intermediate data kept in memory) ---
-
-DIR = "spreadsheet_app"
-os.makedirs(DIR, exist_ok=True)
-
-# Load the base prompt from BasePrompt.txt
-base_prompt = load_base_prompt("BasePrompt.txt")
-
-max_iterations = 5
-iteration = 0
-previous_aggregated_code = ""
-
-while iteration < max_iterations:
-    safe_print(f"\n===== Iteration {iteration+1} =====\n")
-    
-    if iteration == 0:
         # --- Pre-run Gap Analysis & Prompt Update ---
-        if os.listdir(DIR):
+        if os.listdir(OUTPUT_DIR):
             safe_print("Scanning current application files for pre-run gap analysis...")
-            current_files_str = assemble_files(DIR)
-            pre_analysis = gap_analysis(current_files_str)
+            current_files_str = assemble_files(OUTPUT_DIR)
+            pre_analysis = gap_analysis(current_files_str, model=DEFAULT_MODEL)
             safe_print("Pre-run Gap Analysis suggestions:")
             safe_print(pre_analysis)
             updated_prompt = (
@@ -298,64 +334,76 @@ while iteration < max_iterations:
             )
         else:
             updated_prompt = base_prompt
-    else:
-        updated_prompt = base_prompt
 
-    safe_print("Updated prompt for code generation:")
-    safe_print(updated_prompt)
+        safe_print("Updated prompt for code generation:")
+        safe_print(updated_prompt)
 
-    additional_feedback = load_feedback()
-    if additional_feedback:
-        safe_print("Additional feedback loaded")
-        updated_prompt += "\n\nAdditional Very Important Feedback to fix first:\n" + additional_feedback
-    clear_feedback()
+        additional_feedback = load_feedback()
+        if additional_feedback:
+            safe_print("Additional feedback loaded")
+            updated_prompt += "\n\nAdditional Very Important Feedback to fix first:\n" + additional_feedback
+        clear_feedback()
 
-    # --- Step 1: Initial Code Generation ---
-    safe_print("Initial Code Generation Begins")
-    initial_code_output = generate_initial_code(updated_prompt)
-    initial_files = parse_files(initial_code_output)
-    # For the initial generation, simply write the files.
-    write_files(initial_files, DIR)
-    remove_triple_backtick_lines(DIR)
-    safe_print("Initial Code Generation Ends")
+        # --- Step 1: Initial Code Generation (Files kept in memory only) ---
+        safe_print("Initial Code Generation Begins")
+        initial_variants = []
+        for i in range(INITIAL_VARIANT_COUNT):
+            variant = generate_initial_code(updated_prompt, model=DEFAULT_MODEL)
+            initial_variants.append(variant)
+            print(f"Variant {i+1} generated.")
+        safe_print(f"Generated {INITIAL_VARIANT_COUNT} initial code variants.")
 
-    # --- Step 2: Reviews ---
-    safe_print("Review Begins")
-    review1_output = review_code(initial_code_output, "Please review the code and fix any errors or omissions, ensuring that the output is complete and ready-to-run.")
-    safe_print("Reviewer 1 complete")
+        # Merge variants pairwise until one final output remains.
+        final_initial_code_output = merge_variants(initial_variants, model=DEFAULT_MODEL)
+        safe_print("Final initial code output produced via multi-round merging.")
+        initial_code_output = final_initial_code_output
+        safe_print("Initial Code Generation Completed (files stored in memory)")
+        # NOTE: Files are NOT written to disk at this stage.
 
-    review2_output = review_code(initial_code_output, "Please inspect the code for bugs and inconsistencies, and return a fully integrated, corrected version that works out-of-the-box.")
-    safe_print("Reviewer 2 complete")
+        # --- Step 2: Reviews ---
+        safe_print("Review Begins")
+        review1_output = review_code(initial_code_output,
+            "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional.",
+            model=DEFAULT_MODEL)
+        safe_print("Reviewer 1 complete")
 
-    # --- Step 3: Aggregation ---
-    safe_print("Aggregation Begins")
-    aggregated_code_output = aggregate_reviews(initial_code_output, review1_output, review2_output)
-    aggregated_files = parse_files(aggregated_code_output)
-    # Use the auditor to check each file (supporting subdirectories)
-    audited_write_files(aggregated_files, DIR, model=DEFAULT_MODEL)
-    remove_triple_backtick_lines(DIR)
-    safe_print("Aggregation Ends")
+        review2_output = review_code(initial_code_output,
+            "Please inspect the code for bugs and inconsistencies, and return a fully integrated, corrected version that is ready-to-run.",
+            model=DEFAULT_MODEL)
+        safe_print("Reviewer 2 complete")
 
-    # --- Step 4: Post-run Gap Analysis ---
-    safe_print("Post-run Gap Analysis Begins")
-    post_analysis = gap_analysis(aggregated_code_output)
-    safe_print("Post-run Gap Analysis suggestions:")
-    safe_print(post_analysis)
+        # --- Step 3: Aggregation ---
+        safe_print("Aggregation Begins")
+        aggregated_code_output = aggregate_reviews(initial_code_output, review1_output, review2_output, model=DEFAULT_MODEL)
+        aggregated_files = parse_files(aggregated_code_output)
+        # Write files to disk using the auditor for final verification.
+        audited_write_files(aggregated_files, OUTPUT_DIR, model=DEFAULT_MODEL)
+        remove_triple_backtick_lines(OUTPUT_DIR)
+        safe_print("Aggregation Ends")
 
-    # --- Update Base Prompt with Latest Analysis ---
-    base_prompt = (
-        load_base_prompt("BasePrompt.txt") +  # Reload the base prompt in case it has changed
-        "\n\nIncorporate all of the following improvements:\n" + post_analysis
-    )
-    safe_print("Base prompt updated for next iteration:")
-    safe_print(base_prompt)
+        # --- Step 4: Post-run Gap Analysis ---
+        safe_print("Post-run Gap Analysis Begins")
+        post_analysis = gap_analysis(aggregated_code_output, model=DEFAULT_MODEL)
+        safe_print("Post-run Gap Analysis suggestions:")
+        safe_print(post_analysis)
 
-    if aggregated_code_output.strip() == previous_aggregated_code.strip():
-        safe_print("No changes detected in aggregated code. Terminating loop.")
-        break
-    else:
-        previous_aggregated_code = aggregated_code_output
+        # --- Update Base Prompt for next iteration ---
+        base_prompt = (
+            load_base_prompt("BasePrompt.txt") +  # Reload the base prompt in case it has changed
+            "\n\nIncorporate all of the following improvements:\n" + post_analysis
+        )
+        safe_print("Base prompt updated for next iteration:")
+        safe_print(base_prompt)
 
-    iteration += 1
+        if aggregated_code_output.strip() == previous_aggregated_code.strip():
+            safe_print("No changes detected in aggregated code. Terminating loop.")
+            break
+        else:
+            previous_aggregated_code = aggregated_code_output
 
-safe_print(f"\nAll iterations complete. Application files are in '{DIR}'.")
+        iteration += 1
+
+    safe_print(f"\nAll iterations complete. Application files are in '{OUTPUT_DIR}'.")
+
+if __name__ == '__main__':
+    main()

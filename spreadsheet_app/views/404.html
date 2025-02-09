@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 - Not Found</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        body.error-page {
+            /* Additional styles if needed */
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+        }
+        header.error-page-header {
+            /* Additional styles if needed */
+        }
+        .container {
+            margin: 50px auto;
+            width: 80%;
+        }
+        .container.error-page-container {
+            /* Additional styles if needed */
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .error-page-button {
+            /* Additional styles if needed */
+        }
+    </style>
+</head>
+<body class="error-page">
+    <header class="error-page-header">
+        <h1>404 - Page Not Found</h1>
+        <button id="backHomeBtn">Back to Home</button>
+    </header>
+    <div class="container error-page-container">
+        <p>The page you are looking for does not exist.</p>
+        <button class="error-page-button" onclick="window.location.href='/'">Back to Home</button>
+    </div>
+    <script>
+        document.getElementById('backHomeBtn').addEventListener('click', function() {
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>
