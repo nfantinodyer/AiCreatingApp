@@ -1,0 +1,3 @@
+1) make sure model used is gpt-4o-mini
+2) Add a lot more detail and design elements to the website since it's for a fashion app
+3) Add a feature to generate images of the outfit recommendations
