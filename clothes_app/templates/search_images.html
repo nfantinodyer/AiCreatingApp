@@ -1,20 +1,74 @@
 {% extends "base.html" %}
 
+{% block head_scripts %}
+    <title>Image Search</title>
+    <style>
+        .search-pinterest img {
+            width: 200px;
+            margin: 10px;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
     <div class="search-pinterest">
         <h2>Search Images</h2>
         <form onsubmit="event.preventDefault(); searchImages();">
             <input type="text" id="image-query" placeholder="Search for styles, outfits, etc." required>
             <select id="image-source">
-                {% if config.get('pinterest_api_key') %}
                 <option value="pinterest">Pinterest</option>
-                {% endif %}
-                {% if config.get('unsplash_api_key') %}
                 <option value="unsplash">Unsplash</option>
-                {% endif %}
             </select>
             <button type="submit">Search</button>
         </form>
         <div id="image-results"></div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const pinterestApiKey = "";
+        const unsplashApiKey = "";
+
+        function searchImages() {
+            const query = document.getElementById('image-query').value;
+            const source = document.getElementById('image-source').value;
+            const resultsDiv = document.getElementById('image-results');
+            resultsDiv.innerHTML = 'Loading...';
+
+            let apiUrl = '';
+
+            if (source === 'pinterest') {
+                apiUrl = `https://api.pinterest.com/v1/search/pins/?query=${encodeURIComponent(query)}&access_token=${pinterestApiKey}&limit=20`;
+            } else if (source === 'unsplash') {
+                apiUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&client_id=${unsplashApiKey}&per_page=20`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    let images = [];
+                    if (source === 'pinterest') {
+                        images = data.data.map(pin => pin.image.original.url);
+                    } else if (source === 'unsplash') {
+                        images = data.results.map(photo => photo.urls.small);
+                    }
+                    if (images.length === 0) {
+                        resultsDiv.innerHTML = 'No images found.';
+                        return;
+                    }
+                    images.forEach(url => {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = query;
+                        resultsDiv.appendChild(img);
+                    });
+                })
+                .catch(error => {
+                    resultsDiv.innerHTML = 'Error fetching images.';
+                    console.error(error);
+                });
+        }
+    </script>
 {% endblock %}

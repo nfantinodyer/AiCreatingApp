@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="dashboard">
-    <h2>Welcome to your Dashboard</h2>
+    <h2>Welcome to Your Fashion Dashboard</h2>
     <div class="options">
         <div class="option">
             <a href="{{ url_for('pick_outfit') }}">
@@ -18,7 +18,7 @@
                 <button>Upload Image</button>
             </a>
         </div>
-        {% if config.get('pinterest_api_key') or config.get('unsplash_api_key') %}
+        {% if pinterest_api_key or unsplash_api_key %}
         <div class="option">
             <a href="{{ url_for('search_images_page') }}">
                 <button>Search Images</button>

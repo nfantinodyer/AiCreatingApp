@@ -1,21 +1,102 @@
+# app.py
+from flask import Flask, render_template, request
+
+app = Flask(__name__)
+
+@app.route('/', methods=['GET', 'POST'])
+def pick_outfit():
+    recommendation = None
+    explanation = None
+    outfit_image = None
+
+    if request.method == 'POST':
+        style = request.form.get('style', '').lower()
+        if 'casual' in style:
+            recommendation = "Casual Jeans and T-Shirt"
+            explanation = "This outfit is perfect for a relaxed day out, offering comfort and style."
+            outfit_image = "casual_jeans_tshirt.jpg"
+        elif 'formal' in style:
+            recommendation = "Formal Suit"
+            explanation = "Ideal for business meetings and formal events, exuding professionalism."
+            outfit_image = "formal_suit.jpg"
+        elif 'sporty' in style:
+            recommendation = "Sporty Tracksuit"
+            explanation = "Great for workouts or casual sporty activities, providing flexibility and comfort."
+            outfit_image = "sporty_tracksuit.jpg"
+        else:
+            recommendation = "Smart Casual Attire"
+            explanation = "A versatile choice suitable for various occasions, balancing comfort and style."
+            outfit_image = "smart_casual.jpg"
+
+    return render_template('pick_outfit.html', recommendation=recommendation, explanation=explanation, outfit_image=outfit_image)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pick an Outfit for Today</title>
+    <style>
+        .pick-outfit {
+            width: 50%;
+            margin: auto;
+            text-align: center;
+        }
+        .recommendation {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+        }
+        .outfit-image {
+            max-width: 100%;
+            height: auto;
+        }
+        .option-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .option-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
+
+<!-- templates/pick_outfit.html -->
 {% extends "base.html" %}
 
 {% block content %}
     <div class="pick-outfit">
         <h2>Pick an Outfit for Today</h2>
         <form method="POST">
-            <label for="style">Enter your style preferences:</label>
-            <input type="text" name="style" id="style" required>
+            <label for="style">Enter your style preferences:</label><br>
+            <input type="text" name="style" id="style" placeholder="e.g., Casual, Formal, Sporty" required>
+            <br><br>
             <button type="submit">Generate Recommendation</button>
         </form>
-        {% if recommendation %}
-            <div class="recommendation">
-                <h3>Outfit:</h3>
-                <p>{{ recommendation }}</p>
-                <h3>Explanation:</h3>
-                <p>{{ explanation }}</p>
-            </div>
+        {% if recommendation and explanation %}
+        <div class="recommendation">
+            <h3>Outfit:</h3>
+            <p>{{ recommendation }}</p>
+            <h3>Explanation:</h3>
+            <p>{{ explanation }}</p>
+            {% if outfit_image %}
+            <h3>Visual Representation:</h3>
+            <img src="{{ url_for('static', filename='outfits/' + outfit_image) }}" alt="Image of the recommended outfit" class="outfit-image">
+            {% endif %}
             <a href="{{ url_for('pick_outfit') }}" class="option-button">Generate Another Recommendation</a>
+        </div>
         {% endif %}
     </div>
 {% endblock %}

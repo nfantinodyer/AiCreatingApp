@@ -12,10 +12,13 @@ function searchImages() {
         alert('Please enter a search query.');
         return;
     }
+
+    const resultsDiv = document.getElementById('image-results');
+    resultsDiv.innerHTML = 'Loading...';
+
     fetch(`/api/search_images?query=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}`)
         .then(response => response.json())
         .then(data => {
-            const resultsDiv = document.getElementById('image-results');
             resultsDiv.innerHTML = '';
             if (data.results.length === 0) {
                 resultsDiv.innerHTML = '<p>No images found.</p>';
@@ -31,6 +34,13 @@ function searchImages() {
         })
         .catch(error => {
             console.error('Error fetching images:', error);
+            resultsDiv.innerHTML = '<p>An error occurred while fetching images.</p>';
             alert('An error occurred while fetching images.');
         });
+}
+
+function confirmRemoval(formId) {
+    if (confirm("Are you sure you want to remove this image? This action cannot be undone.")) {
+        document.getElementById(formId).submit();
+    }
 }

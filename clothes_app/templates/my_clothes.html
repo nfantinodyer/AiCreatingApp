@@ -3,12 +3,18 @@
 {% block content %}
     <div class="my-clothes">
         <h2>My Clothes Gallery</h2>
+        <form action="{{ url_for('reanalyze') }}" method="POST">
+            <button type="submit" class="reanalyze-button">Reanalyze All Images</button>
+        </form>
         <div class="gallery">
             {% for cloth in clothes %}
             <div class="cloth-item">
-                <img src="{{ url_for('static', filename='uploads/' + cloth.image_filename) }}" alt="Cloth Image">
+                <img src="{{ url_for('static', filename='uploads/' + cloth.image_filename) }}" alt="Image of {{ cloth.description }}">
                 <p>{{ cloth.description }}</p>
                 <p><small>Uploaded on {{ cloth.upload_time.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                <form id="remove-form-{{ cloth.id }}" action="{{ url_for('delete_image', cloth_id=cloth.id) }}" method="POST">
+                    <button type="button" onclick="confirmRemoval('remove-form-{{ cloth.id }}')" class="delete-button" aria-label="Delete Image">&times;</button>
+                </form>
             </div>
             {% endfor %}
             {% if clothes|length == 0 %}
@@ -16,4 +22,11 @@
             {% endif %}
         </div>
     </div>
+    <script>
+        function confirmRemoval(formId) {
+            if (confirm('Are you sure you want to delete this image?')) {
+                document.getElementById(formId).submit();
+            }
+        }
+    </script>
 {% endblock %}

@@ -1,84 +1,99 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
+    background-color: #fff8f0;
 }
 
 header {
-    background-color: #333;
+    background-color: #ff6f61;
     color: #fff;
-    padding: 10px 0;
+    padding: 20px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
     text-align: center;
     margin: 0;
+    font-size: 2.5em;
+    letter-spacing: 2px;
+    font-weight: bold;
 }
 
 nav ul {
     list-style-type: none;
     padding: 0;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 nav li {
     display: inline-block;
-    margin: 0 15px;
+    margin: 0 20px;
 }
 
 nav a {
     color: #fff;
     text-decoration: none;
     font-weight: bold;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #ffe4e1;
 }
 
 main {
-    padding: 20px;
-    min-height: calc(100vh - 160px); /* Adjust based on header and footer height */
+    padding: 30px;
+    min-height: calc(100vh - 180px); /* Adjust based on header and footer height */
+    background-color: #fff8f0;
 }
 
 footer {
-    background-color: #333;
+    background-color: #ff6f61;
     color: #fff;
     text-align: center;
-    padding: 10px 0;
+    padding: 15px 0;
     position: relative;
     width: 100%;
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard .options, .container .options {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 20px;
+    gap: 25px;
 }
 
 .dashboard .option button, .container .button, .pick-outfit button, .upload-section button, .search-pinterest button {
-    padding: 15px 25px;
-    font-size: 16px;
+    padding: 15px 30px;
+    font-size: 18px;
     cursor: pointer;
-    background-color: #007BFF;
+    background-color: #ff6f61;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    border-radius: 25px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard .option button:hover, .container .button:hover, .pick-outfit button:hover, .upload-section button:hover, .search-pinterest button:hover {
-    background-color: #0056b3;
+    background-color: #e65b50;
+    transform: translateY(-3px);
 }
 
-.upload-section, .pick-outfit, .my-clothes, .search-pinterest, .recommendation {
-    background-color: #fff;
-    padding: 20px;
-    border: 1px solid #ddd;
-    margin-bottom: 20px;
-    box-shadow: 2px 2px 12px #aaa;
-    border-radius: 5px;
+.upload-section, .pick-outfit, .my_clothes, .search_pinterest, .recommendation {
+    background-color: #ffffff;
+    padding: 25px;
+    border: 1px solid #ffddd2;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
 }
 
-.upload-section form, .pick-outfit form, .search-pinterest form {
+.upload-section form, .pick-outfit form, .search_pinterest form {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -86,112 +101,195 @@ footer {
 
 .upload-section input[type="file"], 
 .pick-outfit input[type="text"],
-.search-pinterest input[type="text"] {
-    margin-bottom: 10px;
-    padding: 8px;
+.search_pinterest input[type="text"] {
+    margin-bottom: 15px;
+    padding: 10px;
     width: 80%;
     font-size: 16px;
+    border: 1px solid #ff6f61;
+    border-radius: 5px;
 }
 
-.pick-outfit label {
+.pick-outfit label { /* Corrected class name from 'picker-outfit' to 'pick-outfit' */
     align-self: flex-start;
     margin-left: 10%;
     margin-top: 10px;
+    font-weight: bold;
+    color: #333;
 }
 
 .pick-outfit input[type="text"] {
-    width: 60%;
+    width: 70%;
 }
 
 .button, .option-button {
     display: inline-block;
-    padding: 10px 20px;
-    margin-top: 10px;
-    background-color: #007BFF;
+    padding: 12px 25px;
+    margin-top: 15px;
+    background-color: #ff6f61;
     color: #fff;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: 25px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.option-button:hover, .button:hover {
-    background-color: #0056b3;
+.button:hover, .option-button:hover {
+    background-color: #e65b50;
+    transform: translateY(-3px);
 }
 
 .gallery, #image-results {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 20px;
     justify-content: center;
 }
 
 .gallery .cloth-item, #image-results img {
     background-color: #fff;
-    padding: 10px;
-    border: 1px solid #ddd;
-    width: 200px;
-    box-shadow: 2px 2px 12px #aaa;
+    padding: 15px;
+    border: 1px solid #ffddd2;
+    width: 220px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     text-align: center;
-    border-radius: 5px;
+    border-radius: 10px;
+    position: relative;
 }
 
 .gallery .cloth-item img, #image-results img {
     max-width: 100%;
     height: auto;
-    border-radius: 5px;
+    border-radius: 10px;
+}
+
+.gallery .cloth-item p {
+    margin: 10px 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.gallery .cloth-item small {
+    color: #888;
+    font-size: 12px;
 }
 
 .recommendation {
-    background-color: #e2f0d9;
-    padding: 15px;
-    border: 1px solid #b6d7a8;
-    margin-top: 20px;
-    border-radius: 5px;
+    background-color: #fff5e6;
+    padding: 20px;
+    border: 1px solid #ffcc99;
+    margin-top: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.recommendation h3 {
+    color: #ff6f61;
+}
+
+.recommendation img, .outfit-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-top: 15px;
 }
 
 .flashes {
     list-style-type: none;
     padding: 0;
-    margin: 10px 0;
+    margin: 15px 0;
     text-align: center;
 }
 
 .flashes li {
-    background-color: #ffdddd;
-    padding: 10px;
-    border-left: 6px solid #f44336;
-    margin-bottom: 5px;
+    background-color: #ffe6e6;
+    padding: 12px;
+    border-left: 6px solid #ff4d4d;
+    margin-bottom: 8px;
     max-width: 80%;
     margin-left: auto;
     margin-right: auto;
-    border-radius: 3px;
+    border-radius: 4px;
+    font-size: 1em;
 }
 
 .pinterest-search, .search-pinterest {
-    margin-top: 30px;
+    margin-top: 35px;
     text-align: center;
 }
 
 .pinterest-search input[type="text"], .search-pinterest input[type="text"] {
-    padding: 8px;
-    width: 60%;
-    margin-bottom: 10px;
+    padding: 10px;
+    width: 65%;
+    margin-bottom: 12px;
+    border: 1px solid #ff6f61;
+    border-radius: 5px;
 }
 
 .pinterest-search select, .search-pinterest select {
-    padding: 8px;
-    margin-bottom: 10px;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ff6f61;
+    border-radius: 5px;
+    width: 70%;
 }
 
-.option-button {
+.pinterest-search button, .search-pinterest button {
+    padding: 10px 20px;
+    background-color: #ff6f61;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.pinterest-search button:hover, .search-pinterest button:hover {
+    background-color: #e65b50;
+    transform: translateY(-3px);
+}
+
+.delete-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4d4d;
+    border: none;
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+    background-color: #e60000;
+}
+
+.pinterest-image {
+    max-width: 200px;
+    border-radius: 10px;
+}
+
+.search-pinterest img {
+    width: 200px;
+    margin: 10px;
+}
+
+.reanalyze-button {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #007BFF;
+    background-color: #008CBA;
     color: #fff;
     text-decoration: none;
-    border-radius: 5px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
     margin-top: 20px;
 }
 
-.option-button:hover {
-    background-color: #0056b3;
+.reanalyze-button:hover {
+    background-color: #005f6a;
+    transform: translateY(-3px);
 }

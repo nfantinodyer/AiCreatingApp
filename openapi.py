@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import time  # For optional delays on retry
+import requests  # Used to download generated images
 
 # ================= Global Configuration =================
 
@@ -20,7 +21,7 @@ CANDIDATE_MODELS = ["o1-mini", "gpt-4o"]
 DEFAULT_MODEL = CANDIDATE_MODELS[0]
 
 # Parameters to control generation scaling.
-INITIAL_VARIANT_COUNT = 8  # Change this to any number to scale the initial generation.
+INITIAL_VARIANT_COUNT = 4  # Change this to any number to scale the initial generation.
 
 # Global variable for file extensions that should NOT be opened as text.
 DISALLOWED_EXTENSIONS = {
@@ -29,7 +30,9 @@ DISALLOWED_EXTENSIONS = {
     # Video extensions
     '.mp4', '.mkv', '.avi', '.mov', '.webm',
     # Audio extensions
-    '.mp3', '.wav', '.flac', '.ogg', '.aac', '.m4a'
+    '.mp3', '.wav', '.flac', '.ogg', '.aac', '.m4a',
+    # Other
+    '.db', '.ini'
 }
 
 # ================= Utility Functions =================
@@ -139,6 +142,77 @@ def write_files(file_dict, output_directory):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
 
+# ================= New Functions for Image Generation =================
+
+def find_image_references_in_text(text):
+    """
+    Search the provided text for any references to image files.
+    It looks for common patterns in HTML (src=, href=), CSS (url(...)) and Markdown (![...](...)).
+    Returns a set of image file paths (relative paths as written in the code).
+    """
+    image_refs = set()
+    patterns = [
+        r'(?i)(?:src|href)=["\']([^"\']+\.(?:png|jpg|jpeg|gif|bmp|svg|ico))["\']',
+        r'(?i)url\(\s*["\']?([^"\'\s)]+\.(?:png|jpg|jpeg|gif|bmp|svg|ico))["\']?\s*\)',
+        r'(?i)!\[[^\]]*\]\(([^)]+\.(?:png|jpg|jpeg|gif|bmp|svg|ico))\)'
+    ]
+    for pat in patterns:
+        matches = re.findall(pat, text)
+        for m in matches:
+            image_refs.add(m)
+    return image_refs
+
+def generate_image(image_full_path, model="gpt-4o"):
+    """
+    Generate an image using OpenAI’s image-generation API and save it to image_full_path.
+    The prompt is based on the image file's name.
+    """
+    os.makedirs(os.path.dirname(image_full_path), exist_ok=True)
+    image_filename = os.path.basename(image_full_path)
+    prompt = (f"Generate a visually appealing placeholder image for a modern web application. "
+              f"The image should be relevant to the design element named '{image_filename}'.")
+    try:
+        response = openai.Image.create(
+            prompt=prompt,
+            n=1,
+            size="512x512",  # You can adjust the size as needed.
+            response_format="url"
+        )
+        image_url = response['data'][0]['url']
+        r = requests.get(image_url)
+        if r.status_code == 200:
+            with open(image_full_path, "wb") as f:
+                f.write(r.content)
+            safe_print(f"Generated image: {image_full_path}")
+        else:
+            safe_print(f"Failed to download image for {image_full_path}. HTTP status: {r.status_code}")
+    except Exception as e:
+        safe_print(f"Error generating image for {image_full_path}: {e}")
+
+def generate_missing_images(directory):
+    """
+    Walk through text-based files in the directory (and its subdirectories) to find references
+    to images. For any referenced image that does not exist, generate it using generate_image().
+    """
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in DISALLOWED_EXTENSIONS:
+                continue  # Skip binary files.
+            file_path = os.path.join(root, filename)
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+            except UnicodeDecodeError:
+                continue
+            image_refs = find_image_references_in_text(content)
+            for image_ref in image_refs:
+                # Compute the full path of the referenced image (relative to the OUTPUT_DIR).
+                image_full_path = os.path.join(directory, image_ref)
+                if not os.path.exists(image_full_path):
+                    safe_print(f"Image reference '{image_ref}' not found. Generating image...")
+                    generate_image(image_full_path)
+
 # ================= API Wrapper Functions =================
 
 def call_openai_api(prompt, model=DEFAULT_MODEL, max_retries=3):
@@ -186,7 +260,8 @@ def double_check_pair(code_a, code_b, model=DEFAULT_MODEL):
     """
     double_prompt = (
         "You are a master integrator. Compare the two versions of code below and produce a final merged version that incorporates the best improvements from both. "
-        "The final output must be complete, self-contained, and fully functional, with no placeholder text or commentary.\n\n"
+        "While merging, evaluate which version more closely adheres to the original base prompt's guidelines and project vision. "
+        "Favor changes that bring the code in closer alignment with the base prompt, and be willing to let through additional modifications if they add beneficial functionality.\n\n"
         "Version A:\n" + code_a + "\n\n"
         "Version B:\n" + code_b + "\n\n"
         "Return the merged code in the following format:\n"
@@ -225,6 +300,8 @@ def review_code(code, reviewer_prompt, model=DEFAULT_MODEL):
     """
     full_prompt = (
         reviewer_prompt + "\n\n"
+        "Review the code thoroughly, checking for errors, inconsistencies, or deviations from the original base prompt requirements. "
+        "If the code already closely matches the base prompt, allow enhancements that extend its functionality while preserving the core design. "
         "Return the corrected code in the following format:\n"
         "For each file, begin with a header line: '### filename: <filename> ###'\n"
         "Follow with the complete file content, then end with: '### end ###'\n"
@@ -242,8 +319,8 @@ def aggregate_reviews(original_code, review1, review2, model=DEFAULT_MODEL):
     aggregator_prompt = (
         "You are a master integrator of code revisions. Your task is to compare two reviewed versions of the code along with the original version, "
         "and produce a final merged version that incorporates the best improvements from all versions. "
-        "The final output must be complete, self-contained, and immediately runnable. "
-        "Do not include any placeholder text or commentary. Every file must be output in full.\n\n"
+        "Give special weight to changes that improve adherence to the base prompt. If one version is closer to the original project requirements, favor its changes. "
+        "Allow additional beneficial modifications to pass through if they extend functionality while staying true to the base prompt.\n\n"
         "Original Code:\n" + original_code +
         "\n\nReviewer 1 Revised Code:\n" + review1 +
         "\n\nReviewer 2 Revised Code:\n" + review2 +
@@ -263,6 +340,8 @@ def gap_analysis(code_text, model=DEFAULT_MODEL):
     analysis_prompt = (
         "Analyze the following code for a web-based application. "
         "Identify any missing components, errors, or areas for improvement that would ensure the code is fully complete and ready-to-run. "
+        "Also assess how well the code aligns with the original base prompt requirements. "
+        "If the code already closely follows the base prompt, favor suggestions that allow additional beneficial changes rather than removing existing functionality. "
         "Do not propose any security features or placeholder instructions. "
         "Provide only the essential suggestions in plain text.\n\n"
         + code_text
@@ -277,6 +356,8 @@ def audit_file(original_code, new_code, model=DEFAULT_MODEL):
     """
     audit_prompt = (
         "You are a highly experienced code integrator. Your task is to merge any modifications into the original file so that the final output is complete, self-contained, and fully functional. "
+        "When merging, carefully evaluate which modifications align best with the original base prompt's guidelines. "
+        "Favor changes that improve adherence to the project requirements, and allow more modifications to pass through if they extend functionality in a beneficial way. "
         "If the revised version contains only partial changes or instructions like 'do the same as before', integrate those changes into the full file. "
         "Under no circumstances should any placeholder text remain. Provide actual, working code that runs out-of-the-box. "
         "Do not include any commentary or explanation.\n\n"
@@ -295,11 +376,31 @@ def audited_write_files(new_file_dict, output_directory, model=DEFAULT_MODEL):
     """
     For each file to be written, if an original version exists in the output directory,
     merge the new content with the existing file using the auditor function, then write the audited content to disk.
+    Additionally, for files intended to be images (with image extensions) whose content is just the placeholder text,
+    generate a real image instead.
+    If the aggregated file entry represents a directory (e.g. ends with a '/' or the path is already a directory),
+    ensure the directory exists and skip file writing.
     """
     for filename, new_content in new_file_dict.items():
         file_path = os.path.join(output_directory, filename)
+        
+        # If the filename indicates a directory or the path exists as a directory, create it and skip further processing.
+        if filename.endswith('/') or (os.path.exists(file_path) and os.path.isdir(file_path)):
+            os.makedirs(file_path, exist_ok=True)
+            safe_print(f"Ensured directory exists: {file_path}")
+            continue
+
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        if os.path.exists(file_path):
+        
+        # For image files: if content is the placeholder, generate the image.
+        if os.path.splitext(filename)[1].lower() in {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.ico'}:
+            if new_content.strip() == "<binary file not included>":
+                safe_print(f"Generating missing image file: {filename}")
+                generate_image(file_path)
+                continue
+
+        # Read the existing file content if it exists and is not a directory.
+        if os.path.exists(file_path) and not os.path.isdir(file_path):
             with open(file_path, "r", encoding="utf-8") as f:
                 original_content = f.read()
         else:
@@ -377,7 +478,7 @@ def main():
         for i in range(INITIAL_VARIANT_COUNT):
             variant = generate_initial_code(updated_prompt, model=DEFAULT_MODEL)
             initial_variants.append(variant)
-            print(f"Variant {i+1} generated.")
+            safe_print(f"Variant {i+1} generated.")
         safe_print(f"Generated {INITIAL_VARIANT_COUNT} initial code variants.")
 
         # Merge variants pairwise until one final output remains.
@@ -390,12 +491,14 @@ def main():
         # --- Step 2: Reviews ---
         safe_print("Review Begins")
         review1_output = review_code(initial_code_output,
-            "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional.",
+            "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional. "
+            "Ensure that any modifications maintain or enhance the alignment with the original base prompt.",
             model=DEFAULT_MODEL)
         safe_print("Reviewer 1 complete")
 
         review2_output = review_code(initial_code_output,
-            "Please inspect the code for bugs and inconsistencies, and return a fully integrated, corrected version that is ready-to-run.",
+            "Please inspect the code for bugs, inconsistencies, and deviations from the base prompt, and return a fully integrated, corrected version that is ready-to-run. "
+            "Allow additional beneficial changes if they bring the code closer to the base prompt.",
             model=DEFAULT_MODEL)
         safe_print("Reviewer 2 complete")
 
@@ -407,6 +510,10 @@ def main():
         audited_write_files(aggregated_files, OUTPUT_DIR, model=DEFAULT_MODEL)
         remove_triple_backtick_lines(OUTPUT_DIR)
         safe_print("Aggregation Ends")
+
+        # --- Generate Missing Images ---
+        safe_print("Scanning for missing image references and generating images if needed...")
+        generate_missing_images(OUTPUT_DIR)
 
         # --- Step 4: Post-run Gap Analysis ---
         safe_print("Post-run Gap Analysis Begins")

@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Photo Analysis and Outfit Selection Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block styles %}{% endblock %}
     <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
+    {% block head_scripts %}{% endblock %}
 </head>
 <body>
     <header>
@@ -15,7 +17,7 @@
                 <li><a href="{{ url_for('pick_outfit') }}">Pick an Outfit for Today</a></li>
                 <li><a href="{{ url_for('my_clothes') }}">My Clothes</a></li>
                 <li><a href="{{ url_for('upload') }}">Upload Image</a></li>
-                {% if config.get('pinterest_api_key') or config.get('unsplash_api_key') %}
+                {% if pinterest_api_key or unsplash_api_key %}
                 <li><a href="{{ url_for('search_images_page') }}">Search Images</a></li>
                 {% endif %}
             </ul>
@@ -34,7 +36,8 @@
         {% block content %}{% endblock %}
     </main>
     <footer>
-        <p>&copy; 2023 Outfit Selector</p>
+        <p>&copy; 2023 Outfit Selector. All rights reserved.</p>
     </footer>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
