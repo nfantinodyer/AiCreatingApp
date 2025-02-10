@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="pick-outfit">
+        <h2>Pick an Outfit for Today</h2>
+        <form method="POST">
+            <label for="style">Enter your style preferences:</label>
+            <input type="text" name="style" id="style" placeholder="e.g., casual, formal" required>
+            <button type="submit">Generate Recommendation</button>
+        </form>
+        {% if recommendation %}
+            <div class="recommendation">
+                <h3>Outfit:</h3>
+                <p>{{ recommendation }}</p>
+                <h3>Explanation:</h3>
+                <p>{{ explanation }}</p>
+            </div>
+            <a href="{{ url_for('pick_outfit') }}" class="option-button">Generate Another Recommendation</a>
+        {% endif %}
+        <div class="pinterest-search">
+            <h3>Search Images:</h3>
+            <input type="text" id="image-query" placeholder="Search for styles, outfits, etc." required>
+            <select id="image-source">
+                <option value="pinterest">Pinterest</option>
+                <option value="unsplash">Unsplash</option>
+            </select>
+            <button type="button" onclick="searchImages()">Search</button>
+            <div id="image-results"></div>
+        </div>
+    </div>
+{% endblock %}

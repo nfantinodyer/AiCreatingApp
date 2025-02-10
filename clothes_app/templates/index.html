@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Welcome to the Outfit Selection Dashboard</h2>
+    <div class="options">
+        <div class="option">
+            <h3>Pick an Outfit for Today</h3>
+            <a href="{{ url_for('pick_outfit') }}" class="button">Get Recommendation</a>
+        </div>
+        <div class="option">
+            <h3>My Clothes</h3>
+            <a href="{{ url_for('my_clothes') }}" class="button">View Clothes</a>
+        </div>
+        <div class="option">
+            <h3>Upload a New Image</h3>
+            <a href="{{ url_for('upload') }}" class="button">Upload Image</a>
+        </div>
+        <div class="option">
+            <h3>Search Images</h3>
+            <a href="{{ url_for('search_images') }}" class="button">Search Images</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

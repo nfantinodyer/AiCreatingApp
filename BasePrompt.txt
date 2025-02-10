@@ -1,32 +1,34 @@
-Project: Spreadsheet Web Application
+Project: Photo Analysis and Outfit Selection Dashboard
 
-Overview:
-Develop a web-based spreadsheet application that allows users to create, view, edit, and delete spreadsheets. The application should present a grid-based interface where users can input and modify cell data, perform basic calculations, and store spreadsheets in a local database. The user interface must be simple, clean, and intuitive, providing an organized layout for managing spreadsheet data. Do not implement any security features such as user authentication or encryption.
+Overview: Develop a fully functional web-based application that provides a dashboard for analyzing photos and selecting outfits. The dashboard should offer several options: "Pick an outfit for today" to generate an outfit recommendation and "My Clothes" to view a gallery of previously uploaded images. The application must allow users to upload one image at a time. When an image is uploaded, use a GPT-4 vision-capable model (such as gpt-4-turbo, gpt-4o, or gpt-4o-mini) to analyze the image and generate a textual description. In addition, the application should enable users to search for images on Pinterest and to enter a style preference using a text box. All user data—including image metadata, style preferences, and outfit recommendations—should be stored in a local SQLite database. Based on the analyzed images and style preferences, the system will automatically produce an outfit selection with a descriptive explanation of why the outfit is recommended.
 
 Key Features & Requirements:
-- Display a grid-based interface representing spreadsheet cells.
-- Provide functionality to create new spreadsheets.
-- Allow users to input and edit cell values.
-- Enable basic calculations within cells (e.g., sum, average).
-- Save spreadsheets in a local database.
-- Allow users to open, view, and delete existing spreadsheets.
-- Use a simple, clean, and user-friendly interface.
-- All modifications must provide complete, production-ready files.
-- When modifying or adding a file, include the full file content—not just partial updates.
-- Organize files into appropriate directories and create subdirectories as needed.
-- Do not include any security features (authentication, encryption, etc.).
-- Do not include any additional commentary or explanations—output code only.
 
-Output Format:
-Please return your output in the following format for each file:
-### filename: <relative_path/filename> ###
-<complete file content>
-### end ###
+Dashboard with two main options: • "Pick an outfit for today": Generates an outfit recommendation. • "My Clothes": Displays a gallery of uploaded images.
+Single-image upload: Only one image is allowed at a time.
+Image analysis: When an image is uploaded, use the GPT-4 vision model to analyze the image and generate a descriptive text.
+Pinterest image search: Provide a feature for users to search for images on Pinterest.
+Style preference input: Include a text box for users to enter their style preferences.
+Outfit recommendation: Based on the uploaded images, their analysis, and style preferences, automatically generate an outfit suggestion along with a textual explanation.
+Local SQLite database: Store all data (images, preferences, recommendations) using SQLite.
+File Organization: All code must be complete, self-contained, and production-ready. Organize files into appropriate directories (for example, templates for HTML and static for CSS/JS).
+The generated code must follow the strict output format: each file must start with a header line in the format "### filename: <relative_path/filename> ###", then the complete file content, and end with a footer line "### end ###".
+Do not include any placeholder text (such as "Replace with a secure key in production") or extra commentary.
+Working API Code for Image Analysis: Use the following sample code snippet for image analysis. This snippet demonstrates how to use the vision message format with a GPT-4 vision-capable model:
+
+const messages = [ { role: 'system', content: 'Analyze the following images.' }, { role: 'user', content: [ { type: 'text', text: 'What’s in this image?' }, { type: 'image_url', image_url: { "url": your_file } } ] } ];
+# Load API key from configuration file.
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
+openai.api_key = config["api_key"]
+const completion = await openai.chat.completions.create({ messages: messages, model: 'gpt-4o-mini' // or use "gpt-4-turbo" or "gpt-4o" });
 
 Additional Instructions:
-- Create any new directories required by the file paths.
-- Build a working foundation first before adding extra features.
-- Always include the complete file content when making modifications.
-- Follow the above specifications exactly and do not deviate from the format.
 
+Only allow one image upload at a time.
+Use the vision message format and gpt-4o-mini vision-capable models for image analysis.
+Create any new directories required by the file paths.
+Build a working foundation first before adding extra features.
+Always output the complete file content when modifying or adding files.
+Do not include any extra commentary or explanations in the output.
 Please generate the complete code implementation for this project according to these specifications.

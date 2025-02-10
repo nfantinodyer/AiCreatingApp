@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="search-pinterest">
+        <h2>Search Images</h2>
+        <form method="get" onsubmit="event.preventDefault(); searchImages();">
+            <input type="text" name="query" id="image-query" placeholder="Search for styles, outfits, etc." required>
+            <select name="source" id="image-source">
+                <option value="pinterest">Pinterest</option>
+                <option value="unsplash">Unsplash</option>
+            </select>
+            <button type="button" onclick="searchImages()">Search</button>
+        </form>
+        <div id="image-results"></div>
+    </div>
+{% endblock %}

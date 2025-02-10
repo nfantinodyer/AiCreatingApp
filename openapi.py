@@ -8,7 +8,7 @@ import time  # For optional delays on retry
 # ================= Global Configuration =================
 
 # OUTPUT_DIR can be adjusted to point to your desired application output directory.
-OUTPUT_DIR = "spreadsheet_app"  
+OUTPUT_DIR = "clothes_app"  
 
 # Load API key from configuration file.
 with open("config.json", "r") as config_file:

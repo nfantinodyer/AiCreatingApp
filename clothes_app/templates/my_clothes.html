@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="my-clothes">
+        <h2>My Clothes Gallery</h2>
+        <div class="gallery">
+            {% for cloth in clothes %}
+            <div class="cloth-item">
+                <img src="{{ url_for('static', filename='uploads/' + cloth.image_filename) }}" alt="Cloth Image">
+                <p>{{ cloth.description }}</p>
+                <p><small>Uploaded on {{ cloth.upload_time.strftime('%Y-%m-%d %H:%M') }}</small></p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

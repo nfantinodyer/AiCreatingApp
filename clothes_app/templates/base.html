@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Photo Analysis and Outfit Selection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</head>
+<body>
+    <header>
+        <h1>Photo Analysis and Outfit Selection Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('pick_outfit') }}">Pick an Outfit for Today</a></li>
+                <li><a href="{{ url_for('my_clothes') }}">My Clothes</a></li>
+                <li><a href="{{ url_for('upload') }}">Upload Image</a></li>
+                <li><a href="{{ url_for('search_images') }}">Search Images</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2023 Outfit Selector</p>
+    </footer>
+</body>
+</html>
