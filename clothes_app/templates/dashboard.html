@@ -18,11 +18,13 @@
                 <button>Upload Image</button>
             </a>
         </div>
+        {% if config.get('pinterest_api_key') or config.get('unsplash_api_key') %}
         <div class="option">
-            <a href="{{ url_for('search_images') }}">
+            <a href="{{ url_for('search_images_page') }}">
                 <button>Search Images</button>
             </a>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

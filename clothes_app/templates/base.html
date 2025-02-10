@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Photo Analysis and Outfit Selection Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
 </head>
 <body>
     <header>
@@ -15,7 +15,9 @@
                 <li><a href="{{ url_for('pick_outfit') }}">Pick an Outfit for Today</a></li>
                 <li><a href="{{ url_for('my_clothes') }}">My Clothes</a></li>
                 <li><a href="{{ url_for('upload') }}">Upload Image</a></li>
-                <li><a href="{{ url_for('search_images') }}">Search Images</a></li>
+                {% if config.get('pinterest_api_key') or config.get('unsplash_api_key') %}
+                <li><a href="{{ url_for('search_images_page') }}">Search Images</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>

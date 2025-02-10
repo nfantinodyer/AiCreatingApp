@@ -3,13 +3,17 @@
 {% block content %}
     <div class="search-pinterest">
         <h2>Search Images</h2>
-        <form method="get" onsubmit="event.preventDefault(); searchImages();">
-            <input type="text" name="query" id="image-query" placeholder="Search for styles, outfits, etc." required>
-            <select name="source" id="image-source">
+        <form onsubmit="event.preventDefault(); searchImages();">
+            <input type="text" id="image-query" placeholder="Search for styles, outfits, etc." required>
+            <select id="image-source">
+                {% if config.get('pinterest_api_key') %}
                 <option value="pinterest">Pinterest</option>
+                {% endif %}
+                {% if config.get('unsplash_api_key') %}
                 <option value="unsplash">Unsplash</option>
+                {% endif %}
             </select>
-            <button type="button" onclick="searchImages()">Search</button>
+            <button type="submit">Search</button>
         </form>
         <div id="image-results"></div>
     </div>

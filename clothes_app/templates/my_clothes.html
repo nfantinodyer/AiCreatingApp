@@ -11,6 +11,9 @@
                 <p><small>Uploaded on {{ cloth.upload_time.strftime('%Y-%m-%d %H:%M') }}</small></p>
             </div>
             {% endfor %}
+            {% if clothes|length == 0 %}
+                <p>No clothes uploaded yet. <a href="{{ url_for('upload') }}">Upload an image</a> to get started.</p>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

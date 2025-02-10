@@ -3,15 +3,16 @@ function searchImages() {
     const sourceInput = document.getElementById('image-source');
     if (!queryInput || !sourceInput) {
         console.error('Search elements not found.');
+        alert('Search elements not found.');
         return;
     }
-    const query = queryInput.value;
+    const query = queryInput.value.trim();
     const source = sourceInput.value;
     if (!query) {
         alert('Please enter a search query.');
         return;
     }
-    fetch(`/search_images?query=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}`)
+    fetch(`/api/search_images?query=${encodeURIComponent(query)}&source=${encodeURIComponent(source)}`)
         .then(response => response.json())
         .then(data => {
             const resultsDiv = document.getElementById('image-results');
@@ -30,5 +31,6 @@ function searchImages() {
         })
         .catch(error => {
             console.error('Error fetching images:', error);
+            alert('An error occurred while fetching images.');
         });
 }

@@ -22,6 +22,16 @@ DEFAULT_MODEL = CANDIDATE_MODELS[0]
 # Parameters to control generation scaling.
 INITIAL_VARIANT_COUNT = 8  # Change this to any number to scale the initial generation.
 
+# Global variable for file extensions that should NOT be opened as text.
+DISALLOWED_EXTENSIONS = {
+    # Image extensions
+    '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.ico',
+    # Video extensions
+    '.mp4', '.mkv', '.avi', '.mov', '.webm',
+    # Audio extensions
+    '.mp3', '.wav', '.flac', '.ogg', '.aac', '.m4a'
+}
+
 # ================= Utility Functions =================
 
 def safe_print(text):
@@ -37,16 +47,23 @@ def safe_print(text):
 def remove_triple_backtick_lines(directory):
     """
     Walk through the given directory and its subdirectories.
-    For each .html, .js, .css, .py, .txt, or .log file found,
-    remove any lines that contain triple backticks ('```'),
+    For each file that is not of a disallowed type (e.g. image, video, audio),
+    remove any lines that contain triple backticks (```),
     then overwrite the file with the filtered content.
     """
     for root, dirs, files in os.walk(directory):
         for filename in files:
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in DISALLOWED_EXTENSIONS:
+                continue  # Skip files that should not be opened as text.
             file_path = os.path.join(root, filename)
-            with open(file_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-            filtered_lines = [line for line in lines if '```' not in line]
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+            except UnicodeDecodeError:
+                safe_print(f"Skipping file due to decoding error: {file_path}")
+                continue
+            filtered_lines = [line for line in lines if "```" not in line]
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.writelines(filtered_lines)
 
@@ -89,15 +106,25 @@ def assemble_files(directory):
     """
     Recursively assemble the contents of all files in the given directory and its subdirectories
     into a single string in the custom format. Each file is represented with its relative path.
+    
+    For files with extensions in DISALLOWED_EXTENSIONS (e.g., images, videos, audio) a placeholder
+    is inserted. For all other files, an attempt is made to read the content as text.
     """
     result = ""
     for root, dirs, files in os.walk(directory):
         for filename in files:
             file_path = os.path.join(root, filename)
             relative_path = os.path.relpath(file_path, directory)
+            ext = os.path.splitext(filename)[1].lower()
             if os.path.isfile(file_path):
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read().strip()
+                if ext in DISALLOWED_EXTENSIONS:
+                    content = "<binary file not included>"
+                else:
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            content = f.read().strip()
+                    except UnicodeDecodeError:
+                        content = "<Unable to decode file content>"
                 result += f"### filename: {relative_path} ###\n{content}\n### end ###\n"
     return result
 
