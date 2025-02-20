@@ -1,0 +1,60 @@
+Project: Photo Analysis and Outfit Selection Dashboard
+
+Overview: Develop a fully functional web-based application that provides a dashboard for analyzing photos and selecting outfits. The dashboard should offer several options: "Pick an outfit for today" to generate an outfit recommendation and "My Clothes" to view a gallery of previously uploaded images. The application must allow users to upload one image at a time. When an image is uploaded, use a GPT-4 vision-capable model (such as gpt-4-turbo, gpt-4o, or gpt-4o-mini) to analyze the image and generate a textual description. In addition, the application should enable users to search for images on Pinterest and to enter a style preference using a text box. All user data—including image metadata, style preferences, and outfit recommendations—should be stored in a local SQLite database. Based on the analyzed images and style preferences, the system will automatically produce an outfit selection with a descriptive explanation of why the outfit is recommended.
+
+Key Features & Requirements:
+
+Dashboard with two main options: • "Pick an outfit for today": Generates an outfit recommendation. • "My Clothes": Displays a gallery of uploaded images.
+Single-image upload: Only one image is allowed at a time.
+Image analysis: When an image is uploaded, use the o3-mini vision model to analyze the image and generate a descriptive text.
+Pinterest image search: Provide a feature for users to search for images on Pinterest.
+Style preference input: Include a text box for users to enter their style preferences.
+Outfit recommendation: Based on the uploaded images, their analysis, and style preferences, automatically generate an outfit suggestion along with a textual explanation.
+Local SQLite database: Store all data (images, preferences, recommendations) using SQLite.
+File Organization: All code must be complete, self-contained, and production-ready. Organize files into appropriate directories (for example, templates for HTML and static for CSS/JS).
+The generated code must follow the strict output format: each file must start with a header line in the format "### filename: <relative_path/filename> ###", then the complete file content, and end with a footer line "### end ###".
+Do not include any placeholder text (such as "Replace with a secure key in production") or extra commentary.
+Make sure web application's appearance is very nice to look at since it is a fashion-related application.
+Any images you wish to add can be added by simply providing a alt tag with the image name, and the folder you want it stored in, and it will be generated later.
+Working API Code for Image Analysis: Use the following sample code snippet for image analysis. This snippet demonstrates how to use the vision message format with a o3-mini:
+
+const messages = [ { role: 'system', content: 'Analyze the following images.' }, { role: 'user', content: [ { type: 'text', text: 'What’s in this image?' }, { type: 'image_url', image_url: { "url": your_file } } ] } ];
+# Load API key from configuration file.
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
+openai.api_key = config["api_key"]
+const completion = await openai.chat.completions.create({ messages: messages, model: 'o3-mini'});
+
+Additional Instructions:
+Don't use these lines in the code:
+@app.before_first_request
+def initialize():
+    reanalyze_all_images()
+
+Use this for api:
+def call_openai_api(prompt, model=DEFAULT_MODEL, max_retries=3):
+    """
+    Wrapper for calling the OpenAI API.
+    It tries the candidate models in order if an error occurs (e.g. usage limit reached).
+    """
+    for candidate in CANDIDATE_MODELS:
+        current_model = candidate
+        for attempt in range(max_retries):
+            try:
+                response = openai.chat.completions.create(
+                    model=current_model,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.choices[0].message.content
+            except openai.error.OpenAIError as e:
+                safe_print(f"API call using model {current_model} failed on attempt {attempt + 1}: {e}")
+                time.sleep(1)  # Optional: pause briefly before retrying.
+        safe_print(f"Switching from model {current_model} due to repeated errors.")
+    raise Exception("All candidate models failed to process the prompt.")
+
+Only allow one image upload at a time.
+Use the vision message format and o3-mini vision-capable models for image analysis.
+Create any new directories required by the file paths.
+Always output the complete file content when modifying or adding files.
+Do not include any extra commentary or explanations in the output.
+Please generate the complete code implementation for this project according to these specifications.

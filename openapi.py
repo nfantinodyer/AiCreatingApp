@@ -5,11 +5,12 @@ import re
 import sys
 import time  # For optional delays on retry
 import requests  # Used to download generated images
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ================= Global Configuration =================
 
 # OUTPUT_DIR can be adjusted to point to your desired application output directory.
-OUTPUT_DIR = "clothes_app"  
+OUTPUT_DIR = "testingTestingCapability"  
 
 # Load API key from configuration file.
 with open("config.json", "r") as config_file:
@@ -17,7 +18,7 @@ with open("config.json", "r") as config_file:
 openai.api_key = config["api_key"]
 
 # Configure candidate models (order matters: try first then fall back)
-CANDIDATE_MODELS = ["o1-mini", "gpt-4o"]
+CANDIDATE_MODELS = ["gpt-4o-mini", "o1-mini"]
 DEFAULT_MODEL = CANDIDATE_MODELS[0]
 
 # Parameters to control generation scaling.
@@ -194,24 +195,28 @@ def generate_missing_images(directory):
     Walk through text-based files in the directory (and its subdirectories) to find references
     to images. For any referenced image that does not exist, generate it using generate_image().
     """
-    for root, dirs, files in os.walk(directory):
-        for filename in files:
-            ext = os.path.splitext(filename)[1].lower()
-            if ext in DISALLOWED_EXTENSIONS:
-                continue  # Skip binary files.
-            file_path = os.path.join(root, filename)
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                continue
-            image_refs = find_image_references_in_text(content)
-            for image_ref in image_refs:
-                # Compute the full path of the referenced image (relative to the OUTPUT_DIR).
-                image_full_path = os.path.join(directory, image_ref)
-                if not os.path.exists(image_full_path):
-                    safe_print(f"Image reference '{image_ref}' not found. Generating image...")
-                    generate_image(image_full_path)
+    tasks = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        for root, dirs, files in os.walk(directory):
+            for filename in files:
+                ext = os.path.splitext(filename)[1].lower()
+                if ext in DISALLOWED_EXTENSIONS:
+                    continue  # Skip binary files.
+                file_path = os.path.join(root, filename)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    continue
+                image_refs = find_image_references_in_text(content)
+                for image_ref in image_refs:
+                    image_full_path = os.path.join(directory, image_ref)
+                    if not os.path.exists(image_full_path):
+                        safe_print(f"Image reference '{image_ref}' not found. Generating image...")
+                        tasks.append(executor.submit(generate_image, image_full_path))
+        # Wait for all image generation tasks to complete.
+        for task in tasks:
+            task.result()
 
 # ================= API Wrapper Functions =================
 
@@ -229,7 +234,7 @@ def call_openai_api(prompt, model=DEFAULT_MODEL, max_retries=3):
                     messages=[{"role": "user", "content": prompt}],
                 )
                 return response.choices[0].message.content
-            except openai.error.OpenAIError as e:
+            except Exception as e:
                 safe_print(f"API call using model {current_model} failed on attempt {attempt + 1}: {e}")
                 time.sleep(1)  # Optional: pause briefly before retrying.
         safe_print(f"Switching from model {current_model} due to repeated errors.")
@@ -282,11 +287,12 @@ def merge_variants(variants, model=DEFAULT_MODEL):
     while len(current_variants) > 1:
         safe_print(f"Merging round {round_number}: {len(current_variants)} variants to merge.")
         merged_variants = []
-        # Merge in pairs.
-        for i in range(0, len(current_variants) - 1, 2):
-            merged = double_check_pair(current_variants[i], current_variants[i+1], model=model)
-            merged_variants.append(merged)
-        # If odd number of variants, carry the last one over.
+        tasks = []
+        with ThreadPoolExecutor(max_workers=max(1, len(current_variants)//2)) as executor:
+            for i in range(0, len(current_variants) - 1, 2):
+                tasks.append(executor.submit(double_check_pair, current_variants[i], current_variants[i+1], model))
+            for task in tasks:
+                merged_variants.append(task.result())
         if len(current_variants) % 2 == 1:
             merged_variants.append(current_variants[-1])
         current_variants = merged_variants
@@ -372,6 +378,43 @@ def audit_file(original_code, new_code, model=DEFAULT_MODEL):
     )
     return call_openai_api(audit_prompt, model=model)
 
+def process_audit_file(filename, new_content, output_directory, model=DEFAULT_MODEL):
+    """
+    Helper function to audit and write a single file.
+    """
+    file_path = os.path.join(output_directory, filename)
+    
+    # If the filename indicates a directory or the path exists as a directory, create it and skip further processing.
+    if filename.endswith('/') or (os.path.exists(file_path) and os.path.isdir(file_path)):
+        os.makedirs(file_path, exist_ok=True)
+        safe_print(f"Ensured directory exists: {file_path}")
+        return
+
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
+    # For image files: if content is the placeholder, generate the image.
+    if os.path.splitext(filename)[1].lower() in {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.ico'}:
+        if new_content.strip() == "<binary file not included>":
+            safe_print(f"Generating missing image file: {filename}")
+            generate_image(file_path)
+            return
+
+    # Read the existing file content if it exists and is not a directory.
+    if os.path.exists(file_path) and not os.path.isdir(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            original_content = f.read()
+    else:
+        original_content = None
+
+    if original_content:
+        safe_print(f"Auditing file: {filename}")
+        audited_content = audit_file(original_content, new_content, model=model)
+    else:
+        audited_content = new_content
+
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(audited_content)
+
 def audited_write_files(new_file_dict, output_directory, model=DEFAULT_MODEL):
     """
     For each file to be written, if an original version exists in the output directory,
@@ -381,39 +424,12 @@ def audited_write_files(new_file_dict, output_directory, model=DEFAULT_MODEL):
     If the aggregated file entry represents a directory (e.g. ends with a '/' or the path is already a directory),
     ensure the directory exists and skip file writing.
     """
-    for filename, new_content in new_file_dict.items():
-        file_path = os.path.join(output_directory, filename)
-        
-        # If the filename indicates a directory or the path exists as a directory, create it and skip further processing.
-        if filename.endswith('/') or (os.path.exists(file_path) and os.path.isdir(file_path)):
-            os.makedirs(file_path, exist_ok=True)
-            safe_print(f"Ensured directory exists: {file_path}")
-            continue
-
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        
-        # For image files: if content is the placeholder, generate the image.
-        if os.path.splitext(filename)[1].lower() in {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.svg', '.ico'}:
-            if new_content.strip() == "<binary file not included>":
-                safe_print(f"Generating missing image file: {filename}")
-                generate_image(file_path)
-                continue
-
-        # Read the existing file content if it exists and is not a directory.
-        if os.path.exists(file_path) and not os.path.isdir(file_path):
-            with open(file_path, "r", encoding="utf-8") as f:
-                original_content = f.read()
-        else:
-            original_content = None
-
-        if original_content:
-            safe_print(f"Auditing file: {filename}")
-            audited_content = audit_file(original_content, new_content, model=model)
-        else:
-            audited_content = new_content
-
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(audited_content)
+    tasks = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        for filename, new_content in new_file_dict.items():
+            tasks.append(executor.submit(process_audit_file, filename, new_content, output_directory, model))
+        for task in tasks:
+            task.result()
 
 def load_base_prompt(prompt_file="BasePrompt.txt"):
     """
@@ -437,7 +453,7 @@ def load_base_prompt(prompt_file="BasePrompt.txt"):
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-
+    
     # Load the base prompt.
     base_prompt = load_base_prompt("BasePrompt.txt")
 
@@ -472,68 +488,87 @@ def main():
             updated_prompt += "\n\nAdditional Very Important Feedback to fix first:\n" + additional_feedback
         clear_feedback()
 
-        # --- Step 1: Initial Code Generation (Files kept in memory only) ---
+        # --- Step 1: Initial Code Generation (Tree Leaves) ---
         safe_print("Initial Code Generation Begins")
         initial_variants = []
-        for i in range(INITIAL_VARIANT_COUNT):
-            variant = generate_initial_code(updated_prompt, model=DEFAULT_MODEL)
-            initial_variants.append(variant)
-            safe_print(f"Variant {i+1} generated.")
-        safe_print(f"Generated {INITIAL_VARIANT_COUNT} initial code variants.")
+        # Use concurrent generators to produce multiple independent variants.
+        with ThreadPoolExecutor(max_workers=INITIAL_VARIANT_COUNT) as executor:
+            futures = [executor.submit(generate_initial_code, updated_prompt, DEFAULT_MODEL)
+                       for _ in range(INITIAL_VARIANT_COUNT)]
+            for i, future in enumerate(as_completed(futures)):
+                variant = future.result()
+                initial_variants.append(variant)
+                safe_print(f"Initial generator variant {i+1} produced.")
+        safe_print(f"Generated {len(initial_variants)} initial code variants.")
 
-        # Merge variants pairwise until one final output remains.
-        final_initial_code_output = merge_variants(initial_variants, model=DEFAULT_MODEL)
-        safe_print("Final initial code output produced via multi-round merging.")
-        initial_code_output = final_initial_code_output
-        safe_print("Initial Code Generation Completed (files stored in memory)")
-        # NOTE: Files are NOT written to disk at this stage.
+        # --- Step 2: Independent Review Trees ---
+        # For each initial variant, run two reviewers concurrently.
+        tree_aggregated_outputs = []
+        for idx, initial_variant in enumerate(initial_variants):
+            safe_print(f"\nProcessing review tree for variant {idx+1}.")
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_rev1 = executor.submit(
+                    review_code,
+                    initial_variant,
+                    "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional. "
+                    "Ensure that any modifications maintain or enhance the alignment with the original base prompt.",
+                    DEFAULT_MODEL
+                )
+                future_rev2 = executor.submit(
+                    review_code,
+                    initial_variant,
+                    "Please inspect the code for bugs, inconsistencies, and deviations from the base prompt, and return a fully integrated, corrected version that is ready-to-run. "
+                    "Allow additional beneficial changes if they bring the code closer to the base prompt.",
+                    DEFAULT_MODEL
+                )
+                rev1_output = future_rev1.result()
+                rev2_output = future_rev2.result()
+            safe_print(f"Reviews completed for variant {idx+1}.")
 
-        # --- Step 2: Reviews ---
-        safe_print("Review Begins")
-        review1_output = review_code(initial_code_output,
-            "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional. "
-            "Ensure that any modifications maintain or enhance the alignment with the original base prompt.",
-            model=DEFAULT_MODEL)
-        safe_print("Reviewer 1 complete")
+            # Aggregate the outputs from the initial variant and its two reviews.
+            aggregated_tree = aggregate_reviews(initial_variant, rev1_output, rev2_output, model=DEFAULT_MODEL)
+            tree_aggregated_outputs.append(aggregated_tree)
+            safe_print(f"Aggregation complete for variant {idx+1} tree.")
 
-        review2_output = review_code(initial_code_output,
-            "Please inspect the code for bugs, inconsistencies, and deviations from the base prompt, and return a fully integrated, corrected version that is ready-to-run. "
-            "Allow additional beneficial changes if they bring the code closer to the base prompt.",
-            model=DEFAULT_MODEL)
-        safe_print("Reviewer 2 complete")
+        # --- Step 3: Hierarchical Aggregation ---
+        # If more than one aggregated tree exists, merge them pairwise.
+        if len(tree_aggregated_outputs) > 1:
+            safe_print("\nMerging aggregated outputs from individual review trees into a final aggregated output.")
+            final_aggregated_output = merge_variants(tree_aggregated_outputs, model=DEFAULT_MODEL)
+        else:
+            final_aggregated_output = tree_aggregated_outputs[0]
+        safe_print("Final aggregated code output produced for this iteration.")
 
-        # --- Step 3: Aggregation ---
-        safe_print("Aggregation Begins")
-        aggregated_code_output = aggregate_reviews(initial_code_output, review1_output, review2_output, model=DEFAULT_MODEL)
-        aggregated_files = parse_files(aggregated_code_output)
-        # Write files to disk using the auditor for final verification.
+        # Write aggregated files to disk using the auditing process.
+        aggregated_files = parse_files(final_aggregated_output)
         audited_write_files(aggregated_files, OUTPUT_DIR, model=DEFAULT_MODEL)
         remove_triple_backtick_lines(OUTPUT_DIR)
-        safe_print("Aggregation Ends")
+        safe_print("Files written to disk and audited.")
 
         # --- Generate Missing Images ---
         safe_print("Scanning for missing image references and generating images if needed...")
         generate_missing_images(OUTPUT_DIR)
 
         # --- Step 4: Post-run Gap Analysis ---
-        safe_print("Post-run Gap Analysis Begins")
-        post_analysis = gap_analysis(aggregated_code_output, model=DEFAULT_MODEL)
+        safe_print("Performing post-run gap analysis.")
+        post_analysis = gap_analysis(final_aggregated_output, model=DEFAULT_MODEL)
         safe_print("Post-run Gap Analysis suggestions:")
         safe_print(post_analysis)
 
         # --- Update Base Prompt for next iteration ---
         base_prompt = (
-            load_base_prompt("BasePrompt.txt") +  # Reload the base prompt in case it has changed
+            load_base_prompt("BasePrompt.txt") +  # Reload in case of external updates.
             "\n\nIncorporate all of the following improvements:\n" + post_analysis
         )
         safe_print("Base prompt updated for next iteration:")
         safe_print(base_prompt)
 
-        if aggregated_code_output.strip() == previous_aggregated_code.strip():
+        # Double-check: Terminate if no changes are detected between iterations.
+        if final_aggregated_output.strip() == previous_aggregated_code.strip():
             safe_print("No changes detected in aggregated code. Terminating loop.")
             break
         else:
-            previous_aggregated_code = aggregated_code_output
+            previous_aggregated_code = final_aggregated_output
 
         iteration += 1
 
