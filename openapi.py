@@ -576,7 +576,7 @@ def main():
 
         # Write aggregated files to disk using the auditing process.
         aggregated_files = parse_files(final_aggregated_output)
-        audited_write_files(aggregated_files, OUTPUT_DIR, model="o1-mini")
+        audited_write_files(aggregated_files, OUTPUT_DIR, model=DEFAULT_MODEL)
         remove_triple_backtick_lines(OUTPUT_DIR)
         safe_print("Files written to disk and audited.")
 
