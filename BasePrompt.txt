@@ -1,0 +1,8 @@
+Make a game that has two dwarf hampsters who are going to get married. The bride must pick out her outfit and the groom must buy a ring. Create a series of puzzles for both to solve and in the end have them get married.
+This is a two player game where each player controls one of the hampsters. The game should be played on a single screen where each player can see their own character and the other player's character. 
+The game should have a series of levels where each level is a puzzle that the players must solve together. 
+The puzzles should be designed to require cooperation between the two players. For example, one player might need to press a button to open a door for the other player to pass through. 
+The game should have a cute and whimsical art style and should be suitable for all ages. The game should be controlled using the keyboard or a game controller. 
+The game should have a simple and intuitive user interface that is easy to understand. The game should have a save feature so that players can continue their progress at a later time. 
+The game should have a tutorial that explains the basic mechanics of the game. The game should have a fun and engaging story that unfolds as the players progress through the levels.
+Use the keyboard to cycle through the options and press enter to select an option, have a main menu, and multiple levels.

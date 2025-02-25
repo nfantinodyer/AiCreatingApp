@@ -1,0 +1,31 @@
+{
+    "current_level": 1,
+    "game_state": "playing",
+    "puzzles": [
+        {
+            "description": "What tool do you use to drive a nail?",
+            "solution": "hammer",
+            "solved": false
+        },
+        {
+            "description": "What is H2O commonly known as?",
+            "solution": "water",
+            "solved": true
+        },
+        {
+            "description": "What do bees produce?",
+            "solution": "honey",
+            "solved": false
+        },
+        {
+            "description": "What is 2 + 2?",
+            "solution": "4",
+            "solved": false
+        },
+        {
+            "description": "What is the capital of France?",
+            "solution": "paris",
+            "solved": false
+        }
+    ]
+}

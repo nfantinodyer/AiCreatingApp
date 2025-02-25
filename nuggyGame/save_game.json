@@ -1,0 +1,56 @@
+{
+    "current_level": 1,
+    "puzzles": [
+        {
+            "description": "What color is the sky on a clear day?",
+            "solution": "blue",
+            "solved": false
+        },
+        {
+            "description": "What do you call a baby cat?",
+            "solution": "kitten",
+            "solved": false
+        },
+        {
+            "description": "What is 2 + 2?",
+            "solution": "4",
+            "solved": false
+        },
+        {
+            "description": "What is the opposite of cold?",
+            "solution": "hot",
+            "solved": false
+        },
+        {
+            "description": "What do bees produce?",
+            "solution": "honey",
+            "solved": false
+        },
+        {
+            "description": "What is the capital of France?",
+            "solution": "paris",
+            "solved": false
+        },
+        {
+            "description": "What is the largest planet in our solar system?",
+            "solution": "jupiter",
+            "solved": false
+        },
+        {
+            "description": "What language do they speak in Spain?",
+            "solution": "spanish",
+            "solved": false
+        },
+        {
+            "description": "What is H2O commonly known as?",
+            "solution": "water",
+            "solved": false
+        },
+        {
+            "description": "What tool do you use to drive a nail?",
+            "solution": "hammer",
+            "solved": false
+        }
+    ],
+    "game_state": "playing"
+}

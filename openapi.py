@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ================= Global Configuration =================
 
 # OUTPUT_DIR can be adjusted to point to your desired application output directory.
-OUTPUT_DIR = "testingTestingCapability"  
+OUTPUT_DIR = "nuggyGame-o3"  
 
 # Load API key from configuration file.
 with open("config.json", "r") as config_file:
@@ -18,11 +18,11 @@ with open("config.json", "r") as config_file:
 openai.api_key = config["api_key"]
 
 # Configure candidate models (order matters: try first then fall back)
-CANDIDATE_MODELS = ["gpt-4o-mini", "o1-mini"]
+CANDIDATE_MODELS = ["o3-mini", "gpt-4o-mini", "o1-mini"]
 DEFAULT_MODEL = CANDIDATE_MODELS[0]
 
 # Parameters to control generation scaling.
-INITIAL_VARIANT_COUNT = 4  # Change this to any number to scale the initial generation.
+INITIAL_VARIANT_COUNT = 2  # Change this to any number to scale the initial generation.
 
 # Global variable for file extensions that should NOT be opened as text.
 DISALLOWED_EXTENSIONS = {
@@ -223,22 +223,49 @@ def generate_missing_images(directory):
 def call_openai_api(prompt, model=DEFAULT_MODEL, max_retries=3):
     """
     Wrapper for calling the OpenAI API.
-    It tries the candidate models in order if an error occurs (e.g. usage limit reached).
+    It first attempts to call the API using the given model.
+    If all attempts fail, it then attempts to use the candidate
+    that comes immediately before the given model in CANDIDATE_MODELS.
     """
-    for candidate in CANDIDATE_MODELS:
-        current_model = candidate
-        for attempt in range(max_retries):
-            try:
-                response = openai.chat.completions.create(
-                    model=current_model,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                safe_print(f"API call using model {current_model} failed on attempt {attempt + 1}: {e}")
-                time.sleep(1)  # Optional: pause briefly before retrying.
-        safe_print(f"Switching from model {current_model} due to repeated errors.")
-    raise Exception("All candidate models failed to process the prompt.")
+    # Try primary model first.
+    for attempt in range(max_retries):
+        try:
+            response = openai.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            safe_print(f"API call using model {model} failed on attempt {attempt+1}: {e}")
+            time.sleep(1)
+    safe_print(f"All attempts with model {model} failed. Attempting fallback...")
+
+    # Determine fallback model: the candidate immediately preceding the current model.
+    try:
+        index = CANDIDATE_MODELS.index(model)
+        if index > 0:
+            fallback_model = CANDIDATE_MODELS[index - 1]
+        else:
+            fallback_model = model  # No fallback available if this is the first candidate.
+    except ValueError:
+        fallback_model = model
+
+    if fallback_model == model:
+        raise Exception(f"All attempts with model {model} failed and no fallback is available.")
+
+    # Try fallback model.
+    for attempt in range(max_retries):
+        try:
+            response = openai.chat.completions.create(
+                model=fallback_model,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            safe_print(f"API call using fallback model {fallback_model} failed on attempt {attempt+1}: {e}")
+            time.sleep(1)
+    raise Exception(f"All attempts with fallback model {fallback_model} also failed.")
+
 
 # ================= Generation and Review Functions =================
 
@@ -378,6 +405,28 @@ def audit_file(original_code, new_code, model=DEFAULT_MODEL):
     )
     return call_openai_api(audit_prompt, model=model)
 
+def process_review_tree(initial_variant, idx, model=DEFAULT_MODEL):
+    safe_print(f"\nProcessing review tree for variant {idx+1}.")
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        future_rev1 = executor.submit(
+            review_code,
+            initial_variant,
+            "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional. Ensure that any modifications maintain or enhance the alignment with the original base prompt.",
+            model
+        )
+        future_rev2 = executor.submit(
+            review_code,
+            initial_variant,
+            "Please inspect the code for bugs, inconsistencies, and deviations from the base prompt, and return a fully integrated, corrected version that is ready-to-run. Allow additional beneficial changes if they bring the code closer to the base prompt.",
+            model
+        )
+        rev1_output = future_rev1.result()
+        rev2_output = future_rev2.result()
+    safe_print(f"Reviews completed for variant {idx+1}.")
+    aggregated_tree = aggregate_reviews(initial_variant, rev1_output, rev2_output, model=model)
+    safe_print(f"Aggregation complete for variant {idx+1} tree.")
+    return aggregated_tree
+
 def process_audit_file(filename, new_content, output_directory, model=DEFAULT_MODEL):
     """
     Helper function to audit and write a single file.
@@ -464,13 +513,24 @@ def main():
     while iteration < max_iterations:
         safe_print(f"\n===== Iteration {iteration+1} =====\n")
 
+        # --- Determine current model based on iteration ---
+        #if iteration < 2:
+        #    DEFAULT_MODEL = "o1-mini"
+        #    INITIAL_VARIANT_COUNT = 4
+        #elif iteration == 3 or iteration == 2:
+        #    DEFAULT_MODEL = "o3-mini"
+        #    INITIAL_VARIANT_COUNT = 2
+        #else:
+        #    DEFAULT_MODEL = "o1"
+        #    INITIAL_VARIANT_COUNT = 2
+
+        safe_print(f"Using model: {DEFAULT_MODEL} for this generation.")
+
         # --- Pre-run Gap Analysis & Prompt Update ---
         if os.listdir(OUTPUT_DIR):
             safe_print("Scanning current application files for pre-run gap analysis...")
             current_files_str = assemble_files(OUTPUT_DIR)
             pre_analysis = gap_analysis(current_files_str, model=DEFAULT_MODEL)
-            safe_print("Pre-run Gap Analysis suggestions:")
-            safe_print(pre_analysis)
             updated_prompt = (
                 base_prompt +
                 "\n\nCurrent files:\n" + current_files_str +
@@ -478,9 +538,6 @@ def main():
             )
         else:
             updated_prompt = base_prompt
-
-        safe_print("Updated prompt for code generation:")
-        safe_print(updated_prompt)
 
         additional_feedback = load_feedback()
         if additional_feedback:
@@ -503,32 +560,10 @@ def main():
 
         # --- Step 2: Independent Review Trees ---
         # For each initial variant, run two reviewers concurrently.
-        tree_aggregated_outputs = []
-        for idx, initial_variant in enumerate(initial_variants):
-            safe_print(f"\nProcessing review tree for variant {idx+1}.")
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                future_rev1 = executor.submit(
-                    review_code,
-                    initial_variant,
-                    "Please review the code and correct any errors or omissions so that the output is fully complete and immediately functional. "
-                    "Ensure that any modifications maintain or enhance the alignment with the original base prompt.",
-                    DEFAULT_MODEL
-                )
-                future_rev2 = executor.submit(
-                    review_code,
-                    initial_variant,
-                    "Please inspect the code for bugs, inconsistencies, and deviations from the base prompt, and return a fully integrated, corrected version that is ready-to-run. "
-                    "Allow additional beneficial changes if they bring the code closer to the base prompt.",
-                    DEFAULT_MODEL
-                )
-                rev1_output = future_rev1.result()
-                rev2_output = future_rev2.result()
-            safe_print(f"Reviews completed for variant {idx+1}.")
-
-            # Aggregate the outputs from the initial variant and its two reviews.
-            aggregated_tree = aggregate_reviews(initial_variant, rev1_output, rev2_output, model=DEFAULT_MODEL)
-            tree_aggregated_outputs.append(aggregated_tree)
-            safe_print(f"Aggregation complete for variant {idx+1} tree.")
+        with ThreadPoolExecutor(max_workers=len(initial_variants)) as review_executor:
+            review_futures = [review_executor.submit(process_review_tree, variant, idx)
+                            for idx, variant in enumerate(initial_variants)]
+            tree_aggregated_outputs = [future.result() for future in as_completed(review_futures)]
 
         # --- Step 3: Hierarchical Aggregation ---
         # If more than one aggregated tree exists, merge them pairwise.
@@ -541,7 +576,7 @@ def main():
 
         # Write aggregated files to disk using the auditing process.
         aggregated_files = parse_files(final_aggregated_output)
-        audited_write_files(aggregated_files, OUTPUT_DIR, model=DEFAULT_MODEL)
+        audited_write_files(aggregated_files, OUTPUT_DIR, model="o1-mini")
         remove_triple_backtick_lines(OUTPUT_DIR)
         safe_print("Files written to disk and audited.")
 
@@ -550,18 +585,16 @@ def main():
         generate_missing_images(OUTPUT_DIR)
 
         # --- Step 4: Post-run Gap Analysis ---
-        safe_print("Performing post-run gap analysis.")
-        post_analysis = gap_analysis(final_aggregated_output, model=DEFAULT_MODEL)
-        safe_print("Post-run Gap Analysis suggestions:")
-        safe_print(post_analysis)
+        #safe_print("Performing post-run gap analysis.")
+        #post_analysis = gap_analysis(final_aggregated_output, model=DEFAULT_MODEL)
+        #safe_print("Post-run Gap Analysis suggestions:")
+        #safe_print(post_analysis)
 
         # --- Update Base Prompt for next iteration ---
-        base_prompt = (
-            load_base_prompt("BasePrompt.txt") +  # Reload in case of external updates.
-            "\n\nIncorporate all of the following improvements:\n" + post_analysis
-        )
-        safe_print("Base prompt updated for next iteration:")
-        safe_print(base_prompt)
+        #base_prompt = (
+        #    load_base_prompt("BasePrompt.txt") +  # Reload in case of external updates.
+        #    "\n\nIncorporate all of the following improvements:\n" + post_analysis
+        #)
 
         # Double-check: Terminate if no changes are detected between iterations.
         if final_aggregated_output.strip() == previous_aggregated_code.strip():
