@@ -1,0 +1,151 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #fdfdfd;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+header {
+    background-color: #222;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+}
+header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    display: flex;
+    justify-content: center;
+}
+nav ul li {
+    margin: 0 15px;
+}
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+main {
+    padding: 20px;
+}
+.dashboard {
+    text-align: center;
+    margin-top: 50px;
+}
+.options {
+    margin-top: 30px;
+}
+.btn {
+    background-color: #444;
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    margin: 10px;
+    display: inline-block;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+.btn:hover {
+    background-color: #666;
+}
+form {
+    max-width: 500px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 25px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+form label {
+    display: block;
+    margin-bottom: 5px;
+}
+form input[type="text"],
+form input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+form button {
+    background-color: #222;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+.gallery {
+    max-width: 900px;
+    margin: 20px auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.gallery-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    flex: 1 1 calc(33% - 30px);
+    box-sizing: border-box;
+    text-align: center;
+}
+.gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.gallery-item .description {
+    padding: 10px;
+}
+.recommendation {
+    background-color: #eef;
+    padding: 15px;
+    border-radius: 4px;
+    max-width: 600px;
+    margin: 20px auto;
+    text-align: center;
+}
+.pinterest-search {
+    max-width: 600px;
+    margin: 20px auto;
+}
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+.grid .item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 10px;
+    flex: 1 1 calc(33% - 30px);
+    box-sizing: border-box;
+    text-align: center;
+}
+.grid .item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+.flashes {
+    list-style: none;
+    padding: 10px;
+    background-color: #fdd;
+    border: 1px solid #f99;
+    margin: 20px auto;
+    max-width: 500px;
+}
+footer {
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}

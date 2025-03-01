@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My Clothes Gallery</h2>
+<div class="gallery">
+    {% for image in images %}
+    <div class="gallery-item">
+        <img src="{{ url_for('uploaded_file', filename=image['filename']) }}" alt="Clothing Image">
+        <div class="description">
+            <p>{{ image['analysis'] }}</p>
+            <small>{{ image['created_at'] }}</small>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<a class="btn" href="{{ url_for('upload') }}">Upload New Image</a>
+{% endblock %}

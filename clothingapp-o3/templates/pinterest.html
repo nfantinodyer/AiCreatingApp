@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="pinterest-search">
+    <h2>Pinterest Image Search</h2>
+    <form action="{{ url_for('pinterest') }}" method="post">
+        <label for="query">Search term:</label>
+        <input type="text" name="query" id="query" placeholder="Enter style or keyword" required>
+        <button type="submit" class="btn">Search</button>
+    </form>
+    {% if results %}
+    <div class="results">
+        <h3>Search Results:</h3>
+        <div class="grid">
+            {% for result in results %}
+            <div class="item">
+                <img src="{{ result.img }}" alt="{{ result.alt }}">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

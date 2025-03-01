@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard">
+    <h2>Welcome to your Fashion Dashboard</h2>
+    <div class="options">
+        <a class="btn" href="{{ url_for('pick_outfit') }}">Pick an Outfit for Today</a>
+        <a class="btn" href="{{ url_for('my_clothes') }}">My Clothes</a>
+        <a class="btn" href="{{ url_for('upload') }}">Upload New Image</a>
+        <a class="btn" href="{{ url_for('pinterest') }}">Pinterest Search</a>
+    </div>
+</div>
+{% endblock %}

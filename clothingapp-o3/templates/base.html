@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fashion Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Fashion Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('pick_outfit') }}">Pick an Outfit</a></li>
+                <li><a href="{{ url_for('my_clothes') }}">My Clothes</a></li>
+                <li><a href="{{ url_for('upload') }}">Upload New Image</a></li>
+                <li><a href="{{ url_for('pinterest') }}">Pinterest Search</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flashes">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2023 Fashion Dashboard</p>
+    </footer>
+</body>
+</html>

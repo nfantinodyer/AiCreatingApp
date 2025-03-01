@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Pick an Outfit for Today</h2>
+<form method="POST">
+    <label for="style_preference">Enter your style preference:</label>
+    <input type="text" name="style_preference" id="style_preference" placeholder="e.g., casual, formal, sporty" required>
+    <button type="submit">Get Outfit Recommendation</button>
+</form>
+{% endblock %}

@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # ================= Global Configuration =================
 
 # OUTPUT_DIR can be adjusted to point to your desired application output directory.
-OUTPUT_DIR = "nuggyGame-o3"  
+OUTPUT_DIR = "clothingappv2-o3"  
 
 # Load API key from configuration file.
 with open("config.json", "r") as config_file:
